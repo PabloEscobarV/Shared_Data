@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   p_iterator.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:02:34 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/09 14:28:20 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/09 21:58:51 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,22 @@ P_Iterator&	P_Iterator::operator+=(const int16_t incr_val)
 	return *this;
 }
 
+P_Iterator&	P_Iterator::operator++(int)
+{
+	++iterator;
+	return *this;
+}
+
+P_Iterator::operator int16_t() const
+{
+	return iterator;
+}
+
+int16_t	P_Iterator::get_iterator() const
+{
+	return iterator;
+}
+
 bool	P_Iterator::update_iterator(const int16_t i_can)
 {
 	bool result = false;
@@ -43,15 +59,5 @@ bool	P_Iterator::update_iterator(const int16_t i_can)
 
 bool	P_Iterator::check_iterator(const int16_t i_primary, const int16_t i_secondary) const
 {
-	bool result = false;
-
-	if (i_primary > i_secondary + 1)
-	{
-		result = true;
-	}
-	if (i_primary < 0 && i_secondary > 0 && i_primary - i_secondary > 1)
-	{
-		result = true;
-	}
-	return result;
+	return static_cast<uint16_t>(i_primary - i_secondary) > 1;
 }
