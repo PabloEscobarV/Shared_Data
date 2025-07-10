@@ -1,28 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   p_iterator.hpp                                     :+:      :+:    :+:   */
+/*   bit_operations.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/09 13:35:25 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/10 07:36:13 by blackrider       ###   ########.fr       */
+/*   Created: 2025/07/10 08:07:49 by blackrider        #+#    #+#             */
+/*   Updated: 2025/07/10 08:33:16 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstdint>
 
-class	P_Iterator
+#define BYTE_SIZE	8
+
+static void set_bit(uint8_t *data, uint16_t bit, bool state)
 {
-	public:
-		P_Iterator(int16_t i = 0);
-		P_Iterator&	operator++();
-		P_Iterator&	operator++(int);
-		P_Iterator&	operator+=(const int16_t incr_val);
-		operator int16_t() const;
-		int16_t	get_iterator() const;
-		bool		update_iterator(const int16_t i_can);
-		bool		check_iterator(const int16_t i_primary, const int16_t i_secondary) const;
-	private:
-		int16_t		iterator;
-};
+	if (state)
+	{
+		*data |= 1 << (bit % BYTE_SIZE);
+	}
+	else
+	{
+		*data &= ~(1 << (bit % BYTE_SIZE));
+	}
+}
+
+static bool	get_bit(uint8_t data, uint16_t bit)
+{
+	return data & (1 << bit % BYTE_SIZE);
+}
