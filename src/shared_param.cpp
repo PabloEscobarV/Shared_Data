@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/10 11:11:42 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/10 15:21:40 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,10 @@ bool	SharedParam::get_ssv_m(ssv_message_t& message)
 	return true;
 }
 
-bool	SharedParam::get_ssrv_m(ssrv_message_t& message, int32_t new_value)
+bool	SharedParam::get_ssrv_m(ssrv_message_t& message)
 {
 	message.param_num = param_num;
-	message.param_val = new_value;
+	message.param_val = new_param_value;
 	return true;
 }
 
@@ -88,14 +88,16 @@ bool	SharedParam::handle_sse_m(sse_message_t& message)
 	return true;
 }
 
-bool	SharedParam::accept_new_value(int32_t new_value)
+bool	SharedParam::accept_new_value()
 {
 	bool	result = !get_bit(err_code, NEW_VAL_REQ_NOT_ALLOWED);
 	
 	if (result)
 	{
-		set_param_value(new_value);
+		set_param_value(new_param_value);
+		update_iterator();
 	}
+	reset_ssrv_end_counter();
 	return result;
 }
 
@@ -115,6 +117,33 @@ bool	SharedParam::is_req_update_param_value(ssv_message_t& message, uint16_t idx
 		}
 	}
 	return is_req;
+}
+
+void	SharedParam::set_ssrv_end_counter(uint8_t counter)
+{
+	ssrv_end_counter = counter;
+	set_bit(&err_code, SET_SSRV_END_COUNTER, true);
+}
+
+void	SharedParam::reset_ssrv_end_counter()
+{
+	set_bit(&err_code, SET_SSRV_END_COUNTER, false);
+}
+
+bool	SharedParam::get_ssrv_end_counter(uint8_t& counter) const
+{
+	counter = ssrv_end_counter;
+	return get_bit(err_code, SET_SSRV_END_COUNTER);
+}
+
+bool SharedParam::is_new_value_allowed() const
+{
+	return !get_bit(err_code, NEW_VAL_REQ_NOT_ALLOWED);
+}
+
+void SharedParam::update_iterator()
+{
+	iterator += NEW_VAL_ITERATOR_UPDATE;
 }
 
 int32_t	SharedParam::get_param_value()

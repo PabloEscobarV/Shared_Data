@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 08:54:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/10 11:20:05 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/10 15:24:06 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,7 @@ class SharedData
 	private:
 		struct ssrv_service_t
 		{
-			uint8_t	counter;
 			uint8_t	idx;
-			int32_t	new_param_value;
 		};
 		struct	sse_service_t
 		{
@@ -42,7 +40,9 @@ class SharedData
 		static const uint8_t	SSRV_TICKS = 2;
 		static const uint8_t	SSE_TICKS = 5;
 		static const uint8_t	SSRV_ATTEMPTS = 3;
-		uint16_t	tick;
+		static const uint8_t	SSRV_WAIT_TICKS = 25;
+		static const uint8_t	SSRV_MESSAGE_TICKS = 6;
+		uint8_t		tick;
 		uint16_t	idx_ssv;
 		SharedParam	shared_params[count];
 		FSQueue<ssrv_service_t, QUEUE_SIZE>	ssrv_queue;
@@ -54,17 +54,27 @@ class SharedData
 		bool			handle_ssrv_message(const ssrv_message_t &message);
 		bool			handle_sse_message(const sse_message_t& message);
 		uint16_t	get_idx(uint16_t p_num) const;
-
+		uint16_t	check_ssrv_end_counters();
 };
+
+template <uint16_t count>
+SharedData<count>::SharedData() : tick(0), idx_ssv(0)
+{
+
+}
+
+template <uint16_t count>
+void	SharedData<count>::period_counter()
+{
+	tick++;
+}
 
 template <uint16_t count>
 bool	SharedData<count>::add_ssrv_message(uint16_t param_num, int32_t new_param_val)
 {
 	ssrv_service_t	new_message
 	{
-		.counter = SSRV_ATTEMPTS,
 		.idx = get_idx(param_num),
-		.new_param_value = new_param_val
 	};
 	return ssrv_queue.push(new_message);
 }
@@ -72,26 +82,42 @@ bool	SharedData<count>::add_ssrv_message(uint16_t param_num, int32_t new_param_v
 template <uint16_t count>
 bool	SharedData<count>::get_ssv_message(ssv_message_t &message)
 {
-	bool	result = shared_params[idx].get_ssv(message);
-	
-	// Increment the index and wrap around if necessary
-	idx = (idx + 1) % count;
+	bool	result = false;
+	uint16_t	idx = check_ssrv_end_counters();
+
+	if (idx < count)
+	{
+		shared_params[idx].accept_new_value();
+	}
+	else
+	{
+		idx = idx_ssv;
+		// Increment the index and wrap around if necessary
+		idx_ssv = (idx_ssv + 1) % count;
+	}
+	result = shared_params[idx].get_ssv(message);
 	return result;
 }
 
 template <uint16_t count>
 bool	SharedData<count>::get_ssrv_message(ssrv_message_t &message)
 {
-	bool	result = ssrv_queue.pop(ssrv_service);
+	uint8_t	counter = 0;
 	ssrv_service_t	ssrv_service;
+	bool	result = ssrv_queue.pop(ssrv_service);
 
 	if (result)
 	{
-		shared_params[ssrv_service.idx].get_ssrv_m(message, ssrv_service.param_val);
-		ssrv_service.counter--;
-		if (ssrv_service.counter > 0)
+		shared_params[ssrv_service.idx].get_ssrv_end_counter(counter);
+		counter = static_cast<uint8_t>(tick - counter);
+		if ((counter % SSRV_TICKS == 0) && (counter <= SSRV_MESSAGE_TICKS))
 		{
+			hared_params[ssrv_service.idx].get_ssrv_m(message);
 			ssrv_queue.push(ssrv_service);
+		}
+		else
+		{
+			result = false;
 		}
 	}
 	return result;
@@ -188,4 +214,24 @@ uint16_t	SharedData<count>::get_idx(uint16_t p_num) const
 		mid = count;
 	}
 	return mid;
+}
+
+template <uint16_t count>
+uint16_t	SharedData<count>::check_ssrv_end_counters()
+{
+	uint8_t		ssrv_counter = 0;
+	uint16_t	idx = 0;
+	
+	while (idx < count)
+	{
+		if (shared_params[idx].get_ssrv_end_counter(ssrv_counter))
+		{
+			if (static_cast<uint8_t>(tick - ssrv_counter) >= SSRV_WAIT_TICKS)
+			{
+				break ;
+			}
+		}
+		++idx;
+	}
+	return idx;
 }

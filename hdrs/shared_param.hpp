@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:39:08 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/10 11:11:49 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/10 15:21:31 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,23 +42,32 @@ class SharedParam
 			OUT_OF_RANGE_SSV,
 			OUT_OF_RANGE_SSRV,
 			NEW_VAL_REQ_NOT_ALLOWED,
+			SET_SSRV_END_COUNTER,
 		};
 		SharedParam(uint16_t p_num = 0);
 		void			init(uint16_t p_num);
+		bool			accept_new_value();
+		void			set_ssrv_end_counter(uint8_t counter);
+		void			reset_ssrv_end_counter();
+		bool			get_ssrv_end_counter(uint8_t& counter) const;
+		bool			is_new_value_allowed() const;
 		bool			get_ssv_m(ssv_message_t& message);
-		bool			get_ssrv_m(ssrv_message_t& message, int32_t new_value = 0);
+		bool			get_ssrv_m(ssrv_message_t& message);
 		bool			get_sse_m(sse_message_t& message);
 		bool			handle_ssv_m(ssv_message_t& message, uint16_t idx, uint16_t idx_can);
 		bool			handle_ssrv_m(ssrv_message_t& message);
 		bool			handle_sse_m(sse_message_t& message);
-		bool			accept_new_value(int32_t new_value);
 		uint16_t	get_param_num() const;
 	private:
+		static const uint8_t	NEW_VAL_ITERATOR_UPDATE = 3;
+		uint8_t			ssrv_end_counter;
 		uint8_t			err_code;
 		uint16_t		param_num;
+		int32_t			new_param_value;
 		P_Iterator	iterator;
 		bool		is_req_update_param_value(ssv_message_t& message, uint16_t idx, uint16_t idx_can);
 		int32_t	get_param_value();
 		int32_t	get_param_max_value();
 		void		set_param_value(int32_t p_value);
+		void		update_iterator();
 };

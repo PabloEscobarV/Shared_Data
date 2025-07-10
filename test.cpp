@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:26:38 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/10 10:27:56 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/10 13:35:52 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,45 +84,48 @@ int	main()
 	// {
 	// 	check_iterator(INT8_MIN - i, INT8_MAX - i + 3);
 	// }
-	uint32_t count = 100;
-	uint32_t *shared_params = new uint32_t[count];
-	uint32_t step = 0;
-	uint32_t min_step = 0;
-	uint32_t max_step = 0;
+	// uint32_t count = 100;
+	// uint32_t *shared_params = new uint32_t[count];
+	// uint32_t step = 0;
+	// uint32_t min_step = 0;
+	// uint32_t max_step = 0;
 
-	for (uint32_t i = 0; i < count; ++i)
-	{
-		shared_params[i] = i * 2; // Initialize with even numbers for testing
-	}
-	// cout << "SHARED PARAMS: " << endl;
 	// for (uint32_t i = 0; i < count; ++i)
 	// {
-	// 	cout << "PARAM_NUM: " << i << " VALUE: " << shared_params[i] << endl;
+	// 	shared_params[i] = i * 2; // Initialize with even numbers for testing
 	// }
-	cout << "SEARCHING FOR PARAM_NUMS: " << endl;
-	for (int i = 0; i < count * 3; ++i)
-	{
-		uint32_t idx = get_idx(i, shared_params, count, step);
-		if (step < min_step || i == 0)
-		{
-			min_step = step;
-		}
-		if (step > max_step)
-		{
-			max_step = step;
-		}
-		if (idx < count)
-		{
-			cout << "PARAM_NUM: " << i << " INDEX: " << idx << endl;
-		}
-		else
-		{
-			cout << "PARAM_NUM: " << i << " NOT FOUND" << endl;
-		}
-	}
-	cout << "MIN STEP: " << min_step << endl;
-	cout << "MAX STEP: " << max_step << endl;
-	delete[] shared_params;
-	cout << "END OF TEST" << endl;
+	// // cout << "SHARED PARAMS: " << endl;
+	// // for (uint32_t i = 0; i < count; ++i)
+	// // {
+	// // 	cout << "PARAM_NUM: " << i << " VALUE: " << shared_params[i] << endl;
+	// // }
+	// cout << "SEARCHING FOR PARAM_NUMS: " << endl;
+	// for (int i = 0; i < count * 3; ++i)
+	// {
+	// 	uint32_t idx = get_idx(i, shared_params, count, step);
+	// 	if (step < min_step || i == 0)
+	// 	{
+	// 		min_step = step;
+	// 	}
+	// 	if (step > max_step)
+	// 	{
+	// 		max_step = step;
+	// 	}
+	// 	if (idx < count)
+	// 	{
+	// 		cout << "PARAM_NUM: " << i << " INDEX: " << idx << endl;
+	// 	}
+	// 	else
+	// 	{
+	// 		cout << "PARAM_NUM: " << i << " NOT FOUND" << endl;
+	// 	}
+	// }
+	// cout << "MIN STEP: " << min_step << endl;
+	// cout << "MAX STEP: " << max_step << endl;
+	// delete[] shared_params;
+	// cout << "END OF TEST" << endl;
+	uint8_t tick = 0;
+	uint8_t ssrv_end_counter = 255;
+	cout << "DIFF:\t" << (int)(static_cast<uint8_t>(tick - ssrv_end_counter)) << endl;
 	return 0;
 }

@@ -10,6 +10,10 @@
 		"format": "cpp",
 		"initializer_list": "cpp",
 		"span": "cpp",
-		"functional": "cpp"
+		"functional": "cpp",
+		"algorithm": "cpp",
+		"cstdint": "cpp",
+		"compare": "cpp",
+		"chrono": "cpp"
 	}
 }
