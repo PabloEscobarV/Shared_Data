@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/10 08:51:08 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/10 11:11:42 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,11 @@
 SharedParam::SharedParam(uint16_t p_num) : param_num(p_num)
 {
 	
+}
+
+void	SharedParam::init(uint16_t p_num)
+{
+	param_num = p_num;
 }
 
 bool	SharedParam::get_ssv_m(ssv_message_t& message)
@@ -125,4 +130,9 @@ int32_t	SharedParam::get_param_max_value()
 void	SharedParam::set_param_value(int32_t p_value)
 {
 
+}
+
+uint16_t	SharedParam::get_param_num() const
+{
+	return param_num;
 }
