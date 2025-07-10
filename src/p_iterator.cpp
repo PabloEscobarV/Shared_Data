@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   p_iterator.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:02:34 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/09 21:58:51 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/10 16:12:29 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ bool	P_Iterator::update_iterator(const int16_t i_can)
 {
 	bool result = false;
 
-	if (check_iterator(i_can, iterator))
+	if (get_diff(i_can) > ITER_DIFF)
 	{
 		iterator = i_can + 1;
 		result = true;
@@ -57,7 +57,7 @@ bool	P_Iterator::update_iterator(const int16_t i_can)
 	return result;
 }
 
-bool	P_Iterator::check_iterator(const int16_t i_primary, const int16_t i_secondary) const
+int16_t	P_Iterator::get_diff(const int16_t i_can) const
 {
-	return static_cast<uint16_t>(i_primary - i_secondary) > 1;
+	return static_cast<int32_t>(i_can - iterator);
 }
