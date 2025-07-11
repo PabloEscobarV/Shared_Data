@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 08:54:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/11 10:35:58 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/11 12:55:39 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,7 +222,7 @@ uint16_t	SharedData<count>::check_ssrv_end_counters()
 	{
 		if (shared_params[idx].get_ssrv_end_counter(ssrv_counter))
 		{
-			if (get_diff(static_cast<int8_t>(tick) - static_cast<int8_t>(ssrv_counter)) >= SSRV_WAIT_TICKS)
+			if (get_diff(static_cast<int8_t>(tick), static_cast<int8_t>(ssrv_counter)) >= SSRV_WAIT_TICKS)
 			{
 				break ;
 			}

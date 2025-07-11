@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/11 10:31:58 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/11 12:56:13 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ int main()
 {
 	param_data = new ParamData<P_COUNT>();
 	shared_data = new SharedData<P_COUNT>();
-
+	
 	delete param_data;
 	delete shared_data;
 }
