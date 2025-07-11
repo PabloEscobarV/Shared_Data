@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:02:34 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/10 16:12:29 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/11 09:43:19 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,15 +49,10 @@ bool	P_Iterator::update_iterator(const int16_t i_can)
 {
 	bool result = false;
 
-	if (get_diff(i_can) > ITER_DIFF)
+	if (get_diff(i_can, iterator) > ITER_DIFF)
 	{
 		iterator = i_can + 1;
 		result = true;
 	}
 	return result;
-}
-
-int16_t	P_Iterator::get_diff(const int16_t i_can) const
-{
-	return static_cast<int32_t>(i_can - iterator);
 }

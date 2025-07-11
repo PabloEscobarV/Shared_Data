@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:35:25 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/10 16:11:08 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/11 10:39:25 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,13 @@ class	P_Iterator
 		operator int16_t() const;
 		int16_t	get_iterator() const;
 		bool		update_iterator(const int16_t i_can);
-		int16_t	get_diff(const int16_t i_can) const;
 	private:
 		static const uint8_t	ITER_DIFF = 1;
 		int16_t		iterator;
 };
+
+template <typename data_t> 
+data_t	get_diff(const data_t i_primary, const data_t i_secondary)
+{
+	return static_cast<int64_t>(i_primary - i_secondary);
+}

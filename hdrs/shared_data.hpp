@@ -6,13 +6,13 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 08:54:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/10 15:24:06 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/11 10:35:58 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "shared_param.hpp"
-
 #include "queue.hpp"
+#include "test.hpp"
 
 #include <cstdint>
 
@@ -41,7 +41,6 @@ class SharedData
 		static const uint8_t	SSE_TICKS = 5;
 		static const uint8_t	SSRV_ATTEMPTS = 3;
 		static const uint8_t	SSRV_WAIT_TICKS = 25;
-		static const uint8_t	SSRV_MESSAGE_TICKS = 6;
 		uint8_t		tick;
 		uint16_t	idx_ssv;
 		SharedParam	shared_params[count];
@@ -76,6 +75,7 @@ bool	SharedData<count>::add_ssrv_message(uint16_t param_num, int32_t new_param_v
 	{
 		.idx = get_idx(param_num),
 	};
+	shared_params[new_message.idx].set_ssrv_queue_counter();
 	return ssrv_queue.push(new_message);
 }
 
@@ -102,22 +102,21 @@ bool	SharedData<count>::get_ssv_message(ssv_message_t &message)
 template <uint16_t count>
 bool	SharedData<count>::get_ssrv_message(ssrv_message_t &message)
 {
-	uint8_t	counter = 0;
+	uint8_t	queue_counter = 0;
 	ssrv_service_t	ssrv_service;
 	bool	result = ssrv_queue.pop(ssrv_service);
 
 	if (result)
 	{
-		shared_params[ssrv_service.idx].get_ssrv_end_counter(counter);
-		counter = static_cast<uint8_t>(tick - counter);
-		if ((counter % SSRV_TICKS == 0) && (counter <= SSRV_MESSAGE_TICKS))
+		queue_counter = shared_params[ssrv_service.idx].get_ssrv_queue_counter();
+		shared_params[ssrv_service.idx].get_ssrv_m(message);
+		if (queue_counter > 0)
 		{
-			hared_params[ssrv_service.idx].get_ssrv_m(message);
 			ssrv_queue.push(ssrv_service);
 		}
 		else
 		{
-			result = false;
+			shared_params[ssrv_service.idx].set_ssrv_end_counter(SSRV_WAIT_TICKS);
 		}
 	}
 	return result;
@@ -126,8 +125,8 @@ bool	SharedData<count>::get_ssrv_message(ssrv_message_t &message)
 template <uint16_t count>
 bool	SharedData<count>::get_sse_message(sse_message_t &message)
 {
-	bool	result = sse_queue.pop(sse_service);
 	sse_service_t	sse_service;
+	bool	result = sse_queue.pop(sse_service);
 
 	if (result)
 	{
@@ -189,18 +188,15 @@ uint16_t	SharedData<count>::get_idx(uint16_t p_num) const
 	uint16_t	left = 0;
 	uint16_t	right = count;
 	uint16_t 	mid = 0;
-	uint16_t	current_param_num = 0;
 	
 	while (left < right)
 	{
 		mid = left + (right - left) / 2;
-		current_param_num = shared_params[mid].get_param_num();
-		
-		if (current_param_num == p_num)
+		if (shared_params[mid].get_param_num() == p_num)
 		{
 			break ;
 		}
-		if (current_param_num < p_num)
+		if (shared_params[mid].get_param_num() < p_num)
 		{
 			left = mid + 1;
 		}
@@ -209,7 +205,7 @@ uint16_t	SharedData<count>::get_idx(uint16_t p_num) const
 			right = mid;
 		}
 	}
-	if (current_param_num != p_num)
+	if (shared_params[mid].get_param_num() != p_num)
 	{
 		mid = count;
 	}
@@ -226,7 +222,7 @@ uint16_t	SharedData<count>::check_ssrv_end_counters()
 	{
 		if (shared_params[idx].get_ssrv_end_counter(ssrv_counter))
 		{
-			if (static_cast<uint8_t>(tick - ssrv_counter) >= SSRV_WAIT_TICKS)
+			if (get_diff(static_cast<int8_t>(tick) - static_cast<int8_t>(ssrv_counter)) >= SSRV_WAIT_TICKS)
 			{
 				break ;
 			}
@@ -235,3 +231,5 @@ uint16_t	SharedData<count>::check_ssrv_end_counters()
 	}
 	return idx;
 }
+
+SharedData<P_COUNT> *shared_data;

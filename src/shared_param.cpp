@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/10 16:12:29 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/11 10:08:54 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,7 +107,7 @@ bool	SharedParam::is_req_update_param_value(ssv_message_t& message, uint16_t idx
 	
 	if (!iterator.update_iterator(message.iterator))
 	{
-		if (iterator.get_diff(message.iterator) < 0)
+		if (get_diff(iterator.get_iterator(), message.iterator) < 0)
 		{
 			is_req = false;
 		}
@@ -119,21 +119,31 @@ bool	SharedParam::is_req_update_param_value(ssv_message_t& message, uint16_t idx
 	return is_req;
 }
 
+void SharedParam::set_ssrv_queue_counter()
+{
+	ssrv_counter = SSRV_ATTEMPTS;
+}
+
+uint8_t SharedParam::get_ssrv_queue_counter() const
+{
+	return ssrv_counter;
+}
+
 void	SharedParam::set_ssrv_end_counter(uint8_t counter)
 {
-	ssrv_end_counter = counter;
-	set_bit(&err_code, SET_SSRV_END_COUNTER, true);
+	ssrv_counter = counter;
+	set_bit(&err_code, SET_SSRV_COUNTER, true);
 }
 
 void	SharedParam::reset_ssrv_end_counter()
 {
-	set_bit(&err_code, SET_SSRV_END_COUNTER, false);
+	set_bit(&err_code, SET_SSRV_COUNTER, false);
 }
 
 bool	SharedParam::get_ssrv_end_counter(uint8_t& counter) const
 {
-	counter = ssrv_end_counter;
-	return get_bit(err_code, SET_SSRV_END_COUNTER);
+	counter = ssrv_counter;
+	return get_bit(err_code, SET_SSRV_COUNTER);
 }
 
 bool SharedParam::is_new_value_allowed() const
@@ -143,7 +153,7 @@ bool SharedParam::is_new_value_allowed() const
 
 void SharedParam::update_iterator()
 {
-	iterator += NEW_VAL_ITERATOR_UPDATE;
+	iterator += SSRV_ATTEMPTS;
 }
 
 int32_t	SharedParam::get_param_value()
