@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shared_param.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/11 10:08:54 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/11 20:59:23 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,16 +119,6 @@ bool	SharedParam::is_req_update_param_value(ssv_message_t& message, uint16_t idx
 	return is_req;
 }
 
-void SharedParam::set_ssrv_queue_counter()
-{
-	ssrv_counter = SSRV_ATTEMPTS;
-}
-
-uint8_t SharedParam::get_ssrv_queue_counter() const
-{
-	return ssrv_counter;
-}
-
 void	SharedParam::set_ssrv_end_counter(uint8_t counter)
 {
 	ssrv_counter = counter;
@@ -153,7 +143,7 @@ bool SharedParam::is_new_value_allowed() const
 
 void SharedParam::update_iterator()
 {
-	iterator += SSRV_ATTEMPTS;
+	iterator += SSRV_INCR_VALUE;
 }
 
 int32_t	SharedParam::get_param_value()

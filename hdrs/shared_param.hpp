@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shared_param.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:39:08 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/11 09:53:47 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/11 20:59:26 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,8 +47,6 @@ class SharedParam
 		SharedParam(uint16_t p_num = 0);
 		void			init(uint16_t p_num);
 		bool			accept_new_value();
-		void			set_ssrv_queue_counter();
-		uint8_t 	get_ssrv_queue_counter() const;
 		void			set_ssrv_end_counter(uint8_t counter);
 		void			reset_ssrv_end_counter();
 		bool			get_ssrv_end_counter(uint8_t& counter) const;
@@ -61,7 +59,7 @@ class SharedParam
 		bool			handle_sse_m(sse_message_t& message);
 		uint16_t	get_param_num() const;
 	private:
-		static const uint8_t	SSRV_ATTEMPTS = 3;
+		static const uint8_t	SSRV_INCR_VALUE = 3;
 		uint8_t			ssrv_counter;
 		uint8_t			err_code;
 		uint16_t		param_num;

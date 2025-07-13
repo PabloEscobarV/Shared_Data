@@ -15,6 +15,7 @@
 		"cstdint": "cpp",
 		"compare": "cpp",
 		"chrono": "cpp",
-		"random": "cpp"
+		"random": "cpp",
+		"ranges": "cpp"
 	}
 }
