@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/14 16:05:42 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/14 21:39:28 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,7 +214,7 @@ void	init_shared_data(SharedData<P_COUNT> *shared_data,
 	for (uint16_t i = 0; i < P_COUNT; ++i)
 	{
 		shared_data->set_param_num(param_data->get_param_num(i));
-		shared_data->set_iterator(i, rand() % 10 + i_start_value);
+		shared_data->set_iterator(i, i_start_value);
 	}
 }
 

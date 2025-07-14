@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   p_iterator.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 13:35:25 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/14 16:06:45 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/14 22:10:22 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,12 @@ class	P_Iterator
 		P_Iterator&	operator++();
 		P_Iterator&	operator++(int);
 		P_Iterator&	operator+=(const int16_t incr_val);
-		operator int16_t() const;
-		int16_t	get_iterator() const;
+		inline operator int16_t() const { return iterator; }
+		inline int16_t	get_iterator() const { return iterator; }
 		bool		update_iterator(const int16_t i_can);
 		
 		// TEST PURPOSES ONLY
-		void	set_iterator(int16_t i)
+		inline void	set_iterator(int16_t i)
 		{
 			iterator = i;
 		}

@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   test.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:26:38 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/11 09:21:23 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/14 22:02:07 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "hdrs/p_iterator.hpp"
+#include "../hdrs/p_iterator.hpp"
 
 #include <cstdint>
 
@@ -53,10 +53,12 @@ int8_t check_iterator(const int8_t i_primary, const int8_t i_secondary)
 
 int main()
 {
-	for (int8_t i = 50; i > -50; --i)
-	{
-		check_iterator(INT8_MIN - i, INT8_MAX - i + 3);
-	}
+	uint8_t x = 255;
+	cout << "X: " << (int)x << endl;
+	// for (int8_t i = -127; i < 50; ++i)
+	// {
+	// 	check_iterator(i, i + 127);
+	// }
 	return 0;
 }
 

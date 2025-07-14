@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   p_iterator.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:02:34 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/14 15:28:54 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/14 21:26:03 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,16 +35,6 @@ P_Iterator&	P_Iterator::operator++(int)
 {
 	++iterator;
 	return *this;
-}
-
-P_Iterator::operator int16_t() const
-{
-	return iterator;
-}
-
-int16_t	P_Iterator::get_iterator() const
-{
-	return iterator;
 }
 
 bool	P_Iterator::update_iterator(const int16_t i_can)
