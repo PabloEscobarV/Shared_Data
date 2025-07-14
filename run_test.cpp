@@ -1,37 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   bit_operations.hpp                                 :+:      :+:    :+:   */
+/*   run_test.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/10 08:07:49 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/14 11:14:57 by blackrider       ###   ########.fr       */
+/*   Created: 2025/07/14 13:55:51 by blackrider        #+#    #+#             */
+/*   Updated: 2025/07/14 14:05:27 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef BIT_OPERATIONS_HPP
-#define BIT_OPERATIONS_HPP
+#include <iostream>
 
-#include <cstdint>
+using namespace std;
 
-#define BYTE_SIZE	8
-
-static void set_bit(uint8_t *data, uint16_t bit, bool state)
+int main()
 {
-	if (state)
-	{
-		*data |= 1 << (bit % BYTE_SIZE);
-	}
-	else
-	{
-		*data &= ~(1 << (bit % BYTE_SIZE));
-	}
-}
+	int	count = 0;
 
-static bool	get_bit(uint8_t data, uint16_t bit)
-{
-	return data & (1 << bit % BYTE_SIZE);
+	cout << "Enter the number of simulations: ";
+	cin >> count;
+	system("gnome-terminal -- bash -c 'g++ test.cpp src/* -o test'");
+	while (count)
+	{
+		system("gnome-terminal -- bash -c './test; echo; echo Application Finished; echo Press Enter to continue ...; read'");
+		--count;
+	}
+	return 0;
 }
-
-#endif // BIT_OPERATIONS_HPP

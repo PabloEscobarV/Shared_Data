@@ -3,15 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   shared_param.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/11 20:59:23 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/14 16:06:44 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../hdrs/shared_param.hpp"
 #include "../hdrs/bit_operations.hpp"
+
+#include "../hdrs/client_server_shared_setpoint.hpp"
+
+#include <iostream>
+#include <mutex>
+#include <unistd.h>
+
+using std::cout;
+using std::endl;
 
 SharedParam::SharedParam(uint16_t p_num) : param_num(p_num)
 {
@@ -46,7 +55,7 @@ bool	SharedParam::get_sse_m(sse_message_t& message)
 	return true;
 }
 
-bool	SharedParam::handle_ssv_m(ssv_message_t& message, uint16_t idx, uint16_t idx_can)
+bool	SharedParam::handle_ssv_m(const ssv_message_t& message, uint16_t idx, uint16_t idx_can)
 {
 	bool	result = get_param_max_value() >= get_param_value();
 
@@ -54,6 +63,15 @@ bool	SharedParam::handle_ssv_m(ssv_message_t& message, uint16_t idx, uint16_t id
 	{
 		if (is_req_update_param_value(message, idx, idx_can))
 		{
+			mtx_out.lock();
+			cout << "------========++++ SSV RECEIVE ++++========------" << endl;
+			cout << "PID: " << getpid() << endl
+						<< "PARAM NUMBER: " << message.param_num << endl
+						<< "PARAM VALUE: " << message.param_val << endl
+						<< "ITERATOR: " << message.iterator << endl
+						<< endl;
+			cout << "------========++++ SSV RECEIVE ++++========------" << endl;
+			mtx_out.unlock();
 			set_param_value(message.param_val);
 		}
 	}
@@ -64,7 +82,7 @@ bool	SharedParam::handle_ssv_m(ssv_message_t& message, uint16_t idx, uint16_t id
 	return result;
 }
 
-bool	SharedParam::handle_ssrv_m(ssrv_message_t& message)
+bool	SharedParam::handle_ssrv_m(const ssrv_message_t& message)
 {
 	bool	result = get_param_max_value() >= message.param_val;
 
@@ -75,7 +93,7 @@ bool	SharedParam::handle_ssrv_m(ssrv_message_t& message)
 	return result;
 }
 
-bool	SharedParam::handle_sse_m(sse_message_t& message)
+bool	SharedParam::handle_sse_m(const sse_message_t& message)
 {
 	if (get_bit(message.error_code, OUT_OF_RANGE_SSV))
 	{
@@ -101,13 +119,25 @@ bool	SharedParam::accept_new_value()
 	return result;
 }
 
-bool	SharedParam::is_req_update_param_value(ssv_message_t& message, uint16_t idx, uint16_t idx_can)
+bool	SharedParam::add_new_param_value(int32_t new_param_val, uint8_t ssrv_atmp_counter)
+{
+	bool	result = !get_bit(err_code, SET_SSRV_COUNTER);
+	
+	if (result)
+	{
+		new_param_value = new_param_val;
+		set_ssrv_end_counter(ssrv_atmp_counter);
+	}
+	return result;
+}
+
+bool	SharedParam::is_req_update_param_value(const ssv_message_t& message, uint16_t idx, uint16_t idx_can)
 {
 	bool	is_req = message.param_val != get_param_value();
 	
 	if (!iterator.update_iterator(message.iterator))
 	{
-		if (get_diff(iterator.get_iterator(), message.iterator) < 0)
+		if (abs(get_diff(iterator.get_iterator(), message.iterator)) > P_Iterator::ITER_DIFF)
 		{
 			is_req = false;
 		}
@@ -148,17 +178,17 @@ void SharedParam::update_iterator()
 
 int32_t	SharedParam::get_param_value()
 {
-
+	return param_data->get_param_value(param_data->get_param_idx(param_num));
 }
 
 int32_t	SharedParam::get_param_max_value()
 {
-
+	return param_data->get_param_max_value();
 }
 
 void	SharedParam::set_param_value(int32_t p_value)
 {
-
+	param_data->set_param_value(param_data->get_param_idx(param_num), param_num, p_value);
 }
 
 uint16_t	SharedParam::get_param_num() const

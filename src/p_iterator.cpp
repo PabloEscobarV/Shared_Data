@@ -6,11 +6,13 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:02:34 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/11 09:43:19 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/14 15:28:54 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../hdrs/p_iterator.hpp"
+
+#include <iostream>
 
 P_Iterator::P_Iterator(int16_t i) : iterator(i)
 {
@@ -51,6 +53,9 @@ bool	P_Iterator::update_iterator(const int16_t i_can)
 
 	if (get_diff(i_can, iterator) > ITER_DIFF)
 	{
+		mtx_out.lock();
+		std::cout << "CURRENT ITERATOR: " << iterator << " NEW ITERATOR: " << i_can + 1 << std::endl;
+		mtx_out.unlock();
 		iterator = i_can + 1;
 		result = true;
 	}

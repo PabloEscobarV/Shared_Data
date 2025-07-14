@@ -3,12 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   shared_data.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 08:54:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/13 14:31:16 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/14 15:20:06 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#ifndef SHARED_DATA_HPP
+#define SHARED_DATA_HPP
 
 #include "shared_param.hpp"
 #include "queue.hpp"
@@ -16,6 +19,13 @@
 
 #include <cstdint>
 #include <cstring>
+
+#include <iostream>
+#include <unistd.h>
+
+using namespace std;
+
+using idx_t = uint8_t;
 
 enum message_type_t
 {
@@ -27,7 +37,7 @@ enum message_type_t
 struct can_data_t
 {
 	uint8_t		message_type;
-	uint8_t		*data;
+	uint8_t		data[sizeof(ssv_message_t)];
 	uint16_t	data_len;
 
 	uint16_t	idx;
@@ -39,14 +49,21 @@ class SharedData
 {
 	public:
 		SharedData();
+		void	set_param_num(uint16_t param_num);
 		void	period_counter();
 		bool	add_ssrv_message(uint16_t param_num, int32_t new_param_val);
 		bool	get_messages(can_data_t &can_data);
 		bool	handle_messages(can_data_t &can_data);
+
+		// TEST PURPOSES ONLY
+		void	set_iterator(uint16_t idx, int16_t i)
+		{
+			shared_params[idx].set_iterator(i);
+		}
 	private:
 		struct ssrv_service_t
 		{
-			uint8_t	idx;
+			idx_t	idx;
 		};
 		struct	sse_service_t
 		{
@@ -73,7 +90,7 @@ class SharedData
 		bool			handle_ssv_message(const ssv_message_t &message, const uint16_t id, const uint16_t id_can);
 		bool			handle_ssrv_message(const ssrv_message_t &message);
 		bool			handle_sse_message(const sse_message_t& message);
-		uint16_t	get_idx(uint16_t p_num) const;
+		idx_t			get_idx(uint16_t p_num) const;
 		uint16_t	check_ssrv_end_counters();
 };
 
@@ -81,6 +98,13 @@ template <uint16_t count>
 SharedData<count>::SharedData() : tick(0), idx_ssv(0)
 {
 
+}
+
+template <uint16_t count>
+void	SharedData<count>::set_param_num(uint16_t param_num)
+{
+	shared_params[idx_ssv].init(param_num);
+	idx_ssv = (idx_ssv + 1) % count;
 }
 
 template <uint16_t count>
@@ -96,8 +120,18 @@ bool	SharedData<count>::add_ssrv_message(uint16_t param_num, int32_t new_param_v
 	{
 		.idx = get_idx(param_num),
 	};
-	shared_params[new_message.idx].set_ssrv_end_counter(SSRV_ATTEMPTS);
-	return ssrv_queue.push(new_message);
+	bool	result = false;
+
+	if (new_message.idx < count)
+	{
+		shared_params[new_message.idx].add_new_param_value(new_param_val, SSRV_ATTEMPTS);
+		result = ssrv_queue.push(new_message);
+		cout << "PID: " << getpid() 
+					<< " PARAM NUMBER: " << param_num
+					<< " NEW PARAM VALUE: " << new_param_val
+					<< endl;
+	}
+	return result;
 }
 
 template <uint16_t count>
@@ -128,16 +162,42 @@ bool	SharedData<count>::handle_messages(can_data_t &can_data)
 	if (can_data.message_type == SSV_MESSAGE)
 	{
 		memcpy(&ssv_message, can_data.data, can_data.data_len);
+		// mtx_out.lock();
+		// cout << "------========++++ SSV RECEIVE ++++========------" << endl;
+		// cout << "PID: " << getpid() << endl
+		// 			<< "PID CAN: " << can_data.idx_can << endl
+		// 			<< "PARAM NUMBER: " << ssv_message.param_num << endl
+		// 			<< "PARAM VALUE: " << ssv_message.param_val << endl
+		// 			<< "ITERATOR: " << ssv_message.iterator << endl
+		// 			<< endl;
+		// cout << "------========++++ SSV RECEIVE ++++========------" << endl;
+		// mtx_out.unlock();
 		handle_ssv_message(ssv_message, can_data.idx, can_data.idx_can);
 	}
 	if (can_data.message_type == SSRV_MESSAGE)
 	{
 		memcpy(&ssrv_message, can_data.data, can_data.data_len);
+		// mtx_out.lock();
+		// cout << "------========++++ SSRV RECEIVE ++++========------" << endl;
+		// cout << "PID: " << getpid() << endl
+		// 			<< " PARAM NUMBER: " << ssrv_message.param_num << endl
+		// 			<< " PARAM VALUE: " << ssrv_message.param_val << endl
+		// 			<< endl;
+		// cout << "------========++++ SSRV RECEIVE ++++========------" << endl;
+		// mtx_out.unlock();
 		handle_ssrv_message(ssrv_message);
 	}
 	if (can_data.message_type == SSE_MESSAGE)
 	{
 		memcpy(&sse_message, can_data.data, can_data.data_len);
+		// mtx_out.lock();
+		// cout << "------========++++ SSE RECEIVE ++++========------" << endl;
+		// cout << "PID: " << getpid() << endl
+		// 			<< " PARAM NUMBER: " << sse_message.param_num << endl
+		// 			<< " ERROR CODE: " << static_cast<int>(sse_message.error_code) << endl
+		// 			<< endl;
+		// cout << "------========++++ SSE RECEIVE ++++========------" << endl;
+		// mtx_out.unlock();
 		handle_sse_message(sse_message);
 	}
 	return true;
@@ -158,7 +218,14 @@ bool	SharedData<count>::get_ssv_message(ssv_message_t &message)
 		idx = idx_ssv;
 		idx_ssv = (idx_ssv + 1) % count;
 	}
-	result = shared_params[idx].get_ssv(message);
+	result = shared_params[idx].get_ssv_m(message);
+	// mtx_out.lock();
+	// cout << "PID: " << getpid() 
+	// 			<< "PARAM NUMBER: " << message.param_num
+	// 			<< " PARAM VALUE: " << message.param_val
+	// 			<< " ITERATOR: " << message.iterator
+	// 			<< endl;
+	// mtx_out.unlock();
 	return result;
 }
 
@@ -176,6 +243,7 @@ bool	SharedData<count>::get_ssrv_message(ssrv_message_t &message)
 		if ((--queue_counter) > 0)
 		{
 			ssrv_queue.push(ssrv_service);
+			ssrv_queue.swap(SSRV_PERIOD);
 			shared_params[ssrv_service.idx].set_ssrv_end_counter(queue_counter);
 		}
 		else
@@ -199,6 +267,7 @@ bool	SharedData<count>::get_sse_message(sse_message_t &message)
 		if (sse_service.counter > 0)
 		{
 			sse_queue.push(sse_service);
+			sse_queue.swap(SSE_PERIOD);
 		}
 	}
 	return result;
@@ -262,11 +331,15 @@ bool	SharedData<count>::handle_ssv_message(const ssv_message_t &message,
 		.counter = SSRV_ATTEMPTS,
 		.idx = get_idx(message.param_num),
 	};
-	bool	result = shared_params[sse_service.idx].handle_ssv_m(message, id, id_can);
-
-	if (!result)
+	bool	result = false; 
+	
+	if (sse_service.idx < count)
 	{
-		sse_queue.push(sse_service);
+		result = shared_params[sse_service.idx].handle_ssv_m(message, id, id_can);
+		if (!result)
+		{
+			sse_queue.push(sse_service);
+		}
 	}
 	return result;
 }
@@ -276,14 +349,18 @@ bool	SharedData<count>::handle_ssrv_message(const ssrv_message_t &message)
 {
 	sse_service_t	sse_service
 	{
-		.counter = SSRV_ATTEMPTS,
+		.counter = 1,
 		.idx = get_idx(message.param_num),
 	};
-	bool	result = shared_params[sse_service.idx].handle_ssrv_m(message);
+	bool	result;
 	
-	if (!result)
+	if (sse_service.idx < count)
 	{
-		sse_queue.push(sse_service);
+		result = shared_params[sse_service.idx].handle_ssrv_m(message);
+		if (!result)
+		{
+			sse_queue.push(sse_service);
+		}
 	}
 	return result;
 }
@@ -291,15 +368,22 @@ bool	SharedData<count>::handle_ssrv_message(const ssrv_message_t &message)
 template <uint16_t count>
 bool	SharedData<count>::handle_sse_message(const sse_message_t &message)
 {
-	return shared_params[get_idx(message.param_num)].handle_sse_m(message);
+	bool	result = false;
+	uint16_t idx = get_idx(message.param_num);
+	
+	if (idx < count)
+	{
+		result = shared_params[idx].handle_sse_m(message);
+	}
+	return result;
 }
 
 template <uint16_t count>
-uint16_t	SharedData<count>::get_idx(uint16_t p_num) const
+idx_t	SharedData<count>::get_idx(uint16_t p_num) const
 {
-	uint16_t	left = 0;
-	uint16_t	right = count;
-	uint16_t 	mid = 0;
+	idx_t	left = 0;
+	idx_t	right = count;
+	idx_t 	mid = 0;
 	
 	while (left < right)
 	{
@@ -344,4 +428,6 @@ uint16_t	SharedData<count>::check_ssrv_end_counters()
 	return idx;
 }
 
-SharedData<P_COUNT> *shared_data;
+extern SharedData<P_COUNT> *shared_data;
+
+#endif

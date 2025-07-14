@@ -3,16 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   shared_param.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:39:08 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/11 20:59:26 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/14 15:23:13 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#ifndef SHARED_PARAM_HPP
+#define SHARED_PARAM_HPP
 
 #include "p_iterator.hpp"
 
 #include <cstdint>
+
+#include <mutex>
 
 struct	ssv_message_t
 {
@@ -47,6 +52,7 @@ class SharedParam
 		SharedParam(uint16_t p_num = 0);
 		void			init(uint16_t p_num);
 		bool			accept_new_value();
+		bool			add_new_param_value(int32_t new_param_val, uint8_t ssrv_atmp_counter);
 		void			set_ssrv_end_counter(uint8_t counter);
 		void			reset_ssrv_end_counter();
 		bool			get_ssrv_end_counter(uint8_t& counter) const;
@@ -54,10 +60,17 @@ class SharedParam
 		bool			get_ssv_m(ssv_message_t& message);
 		bool			get_ssrv_m(ssrv_message_t& message);
 		bool			get_sse_m(sse_message_t& message);
-		bool			handle_ssv_m(ssv_message_t& message, uint16_t idx, uint16_t idx_can);
-		bool			handle_ssrv_m(ssrv_message_t& message);
-		bool			handle_sse_m(sse_message_t& message);
+		bool			handle_ssv_m(const ssv_message_t& message, uint16_t idx, uint16_t idx_can);
+		bool			handle_ssrv_m(const ssrv_message_t& message);
+		bool			handle_sse_m(const sse_message_t& message);
 		uint16_t	get_param_num() const;
+
+	// TEST PURPOSES ONLY
+
+		void	set_iterator(int16_t i)
+		{
+			iterator.set_iterator(i);
+		}
 	private:
 		static const uint8_t	SSRV_INCR_VALUE = 3;
 		uint8_t			ssrv_counter;
@@ -65,9 +78,11 @@ class SharedParam
 		uint16_t		param_num;
 		int32_t			new_param_value;
 		P_Iterator	iterator;
-		bool		is_req_update_param_value(ssv_message_t& message, uint16_t idx, uint16_t idx_can);
+		bool		is_req_update_param_value(const ssv_message_t& message, uint16_t idx, uint16_t idx_can);
 		int32_t	get_param_value();
 		int32_t	get_param_max_value();
 		void		set_param_value(int32_t p_value);
 		void		update_iterator();
 };
+
+#endif // SHARED_PARAM_HPP
