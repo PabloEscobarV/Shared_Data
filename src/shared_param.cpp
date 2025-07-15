@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/14 16:06:44 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/15 09:41:24 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,7 +137,7 @@ bool	SharedParam::is_req_update_param_value(const ssv_message_t& message, uint16
 	
 	if (!iterator.update_iterator(message.iterator))
 	{
-		if (abs(get_diff(iterator.get_iterator(), message.iterator)) > P_Iterator::ITER_DIFF)
+		if ()
 		{
 			is_req = false;
 		}
