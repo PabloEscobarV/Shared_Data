@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:26:38 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/14 22:02:07 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/15 13:45:14 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,12 +38,12 @@ using namespace std;
 
 int8_t get_diff(const int8_t i_primary, const int8_t i_secondary)
 {
-	return static_cast<int32_t>(i_primary - i_secondary);
+	return static_cast<int8_t>(i_primary - i_secondary);
 }
 
 int8_t check_iterator(const int8_t i_primary, const int8_t i_secondary)
 {
-	int8_t diff = get_diff(i_primary, i_secondary);
+	int32_t diff = get_diff(i_primary, i_secondary);
 	cout << "I_PRIMARY: " << (int)i_primary
 			<< " I_SECONDARY: " << (int)i_secondary
 			<< " DIFF: " << (int)get_diff(i_primary, i_secondary)
@@ -53,12 +53,10 @@ int8_t check_iterator(const int8_t i_primary, const int8_t i_secondary)
 
 int main()
 {
-	uint8_t x = 255;
-	cout << "X: " << (int)x << endl;
-	// for (int8_t i = -127; i < 50; ++i)
-	// {
-	// 	check_iterator(i, i + 127);
-	// }
+	for (int8_t i = 0; i < 127; ++i)
+	{
+		check_iterator(i + 100, i + 98);
+	}
 	return 0;
 }
 

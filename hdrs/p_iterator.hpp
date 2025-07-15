@@ -3,14 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   p_iterator.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/09 13:35:25 by blackrider        #+#    #+#             */
-<<<<<<< Updated upstream
-/*   Updated: 2025/07/14 22:10:22 by Pablo Escob      ###   ########.fr       */
-=======
-/*   Updated: 2025/07/15 08:53:54 by blackrider       ###   ########.fr       */
->>>>>>> Stashed changes
+/*   Created: 2025/07/15 12:03:45 by blackrider        #+#    #+#             */
+/*   Updated: 2025/07/15 14:11:43 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +23,7 @@ class	P_Iterator
 {
 	public:
 		static const uint8_t	ITER_DIFF = 1;
-		static const int16_t	ITERATOR_NO_VALID = -2;
+		static const int16_t	ITERATOR_NO_VALID = INT16_MIN;
 		static const int16_t	ITERATOR_VALID_FIRST = 0;
 		P_Iterator(int16_t i = ITERATOR_NO_VALID);
 		P_Iterator&	operator++();
@@ -36,9 +32,11 @@ class	P_Iterator
 		inline operator int16_t() const { return iterator; }
 		inline int16_t	get_iterator() const { return iterator; }
 		bool		update_iterator(const int16_t i_can);
-		static bool check_iterators(int16_t i_primary, int16_t i_secondary);
-		template <typename data_t>
-		static inline data_t	get_diff(const data_t i_primary, const data_t i_secondary)
+		static inline bool check_iterators(int16_t i_primary, int16_t i_secondary)
+		{
+			return get_diff(i_primary, i_secondary) > ITER_DIFF;
+		}
+		static inline int16_t	get_diff(const int16_t i_primary, const int16_t i_secondary)
 		{
 			return static_cast<int64_t>(i_primary - i_secondary);
 		}
@@ -49,6 +47,10 @@ class	P_Iterator
 		}
 	private:
 		int16_t		iterator;
+		static inline bool is_no_valid_iterator(int16_t i)
+		{
+			return (i == ITERATOR_NO_VALID);
+		}
 		static inline int16_t	check_no_valid_iterator(int16_t i)
 		{
 			if (i < 0 && i >= ITERATOR_NO_VALID) { return ITERATOR_VALID_FIRST; }
