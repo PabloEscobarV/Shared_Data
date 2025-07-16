@@ -6,11 +6,9 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:26:38 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/15 13:45:14 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 07:30:04 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-#include "../hdrs/p_iterator.hpp"
 
 #include <cstdint>
 
@@ -36,9 +34,9 @@ using namespace std;
 // 	return result;
 // }
 
-int8_t get_diff(const int8_t i_primary, const int8_t i_secondary)
+int8_t get_diff(const uint8_t i_primary, const uint8_t i_secondary)
 {
-	return static_cast<int8_t>(i_primary - i_secondary);
+	return static_cast<uint8_t>(i_primary - i_secondary);
 }
 
 int8_t check_iterator(const int8_t i_primary, const int8_t i_secondary)
@@ -53,10 +51,17 @@ int8_t check_iterator(const int8_t i_primary, const int8_t i_secondary)
 
 int main()
 {
-	for (int8_t i = 0; i < 127; ++i)
+	int16_t iterator = 0; // Example iterator value
+	for (int i = 0; i < 255; ++i)
 	{
-		check_iterator(i + 100, i + 98);
+		// cout << "ITERATOR: " << iterator << " ITERATOR8_t: " << (int)static_cast<int8_t>(iterator) << "[" << i << "]" << endl;
+		check_iterator(static_cast<uint8_t>((iterator + 2)), static_cast<uint8_t>((iterator)));
+		iterator = (iterator & 0xFF00) | (static_cast<uint8_t>(iterator) + 1);
 	}
+	// for (int16_t i = -32767; i < -31800; ++i)
+	// {
+	// 	check_iterator(i, i - 2);
+	// }
 	return 0;
 }
 

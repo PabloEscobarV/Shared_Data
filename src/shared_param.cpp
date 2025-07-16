@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/15 13:30:38 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 11:01:28 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,7 @@ bool	SharedParam::handle_ssv_m(const ssv_message_t& message, uint16_t idx, uint1
 			mtx_out.lock();
 			cout << "------========++++ SSV RECEIVE ++++========------" << endl;
 			cout << "PID: " << getpid() << endl
+						<< "PID CAN: " << idx_can << endl
 						<< "PARAM NUMBER: " << message.param_num << endl
 						<< "PARAM VALUE: " << message.param_val << endl
 						<< "ITERATOR: " << message.iterator << endl
@@ -77,7 +78,7 @@ bool	SharedParam::handle_ssv_m(const ssv_message_t& message, uint16_t idx, uint1
 	}
 	else
 	{
-		set_bit(&err_code, OUT_OF_RANGE_SSV, true);
+		set_bit(err_code, OUT_OF_RANGE_SSV, true);
 	}
 	return result;
 }
@@ -88,7 +89,7 @@ bool	SharedParam::handle_ssrv_m(const ssrv_message_t& message)
 
 	if (!result)
 	{
-		set_bit(&err_code, OUT_OF_RANGE_SSRV, true);
+		set_bit(err_code, OUT_OF_RANGE_SSRV, true);
 	}
 	return result;
 }
@@ -101,7 +102,7 @@ bool	SharedParam::handle_sse_m(const sse_message_t& message)
 	}
 	if (get_bit(message.error_code, OUT_OF_RANGE_SSRV))
 	{
-		set_bit(&err_code, NEW_VAL_REQ_NOT_ALLOWED, true);
+		set_bit(err_code, NEW_VAL_REQ_NOT_ALLOWED, true);
 	}
 	return true;
 }
@@ -134,7 +135,15 @@ bool	SharedParam::add_new_param_value(int32_t new_param_val, uint8_t ssrv_atmp_c
 bool	SharedParam::is_req_update_param_value(const ssv_message_t& message, uint16_t idx, uint16_t idx_can)
 {
 	bool	is_req = message.param_val != get_param_value();
-	
+
+	mtx_out.lock();
+	cout << "PID: " << getpid() 
+				<< " PID CAN: " << idx_can
+				<< " PARAM NUMBER: " << message.param_num
+				<< " PARAM VALUE: " << message.param_val
+				<< " ITERATOR: " << message.iterator
+				<< endl;
+	mtx_out.unlock();
 	if (!iterator.update_iterator(message.iterator))
 	{
 		if (P_Iterator::check_iterators(iterator, message.iterator))
@@ -144,6 +153,13 @@ bool	SharedParam::is_req_update_param_value(const ssv_message_t& message, uint16
 		if (is_req && (idx_can > idx))
 		{
 			is_req = false;
+			mtx_out.lock();
+			cout << "PID: " << getpid() 
+						<< " PARAM NUMBER: " << message.param_num
+						<< " PARAM VALUE: " << message.param_val
+						<< " ITERATOR: " << message.iterator
+						<< " NOT ALLOWED: idx_can > idx" << endl;
+			mtx_out.unlock();
 		}
 	}
 	return is_req;
@@ -152,12 +168,12 @@ bool	SharedParam::is_req_update_param_value(const ssv_message_t& message, uint16
 void	SharedParam::set_ssrv_end_counter(uint8_t counter)
 {
 	ssrv_counter = counter;
-	set_bit(&err_code, SET_SSRV_COUNTER, true);
+	set_bit(err_code, SET_SSRV_COUNTER, true);
 }
 
 void	SharedParam::reset_ssrv_end_counter()
 {
-	set_bit(&err_code, SET_SSRV_COUNTER, false);
+	set_bit(err_code, SET_SSRV_COUNTER, false);
 }
 
 bool	SharedParam::get_ssrv_end_counter(uint8_t& counter) const

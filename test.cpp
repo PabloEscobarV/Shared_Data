@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/15 13:38:18 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 10:57:56 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@
 #include <mutex>
 
 #define SEND_DURATION		1000 // Duration in milliseconds for sending messages
-#define SSV_SLEEP_TIME	100
+#define SSV_SLEEP_TIME	300
 #define TIME_20_MS			20 // Timeout in milliseconds for SSV messages
 #define INVALID_SOCKET	-1
 #define MULTICAST_PORT  12345

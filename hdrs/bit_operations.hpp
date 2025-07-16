@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 08:07:49 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/14 11:14:57 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 07:28:27 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,21 +17,23 @@
 
 #define BYTE_SIZE	8
 
-static void set_bit(uint8_t *data, uint16_t bit, bool state)
+template <typename int_t>
+void set_bit(int_t& data, uint8_t bit, bool state)
 {
 	if (state)
 	{
-		*data |= 1 << (bit % BYTE_SIZE);
+		data |= static_cast<int_t>(1) << bit;
 	}
 	else
 	{
-		*data &= ~(1 << (bit % BYTE_SIZE));
+		data &= ~(static_cast<int_t>(1) << bit);
 	}
 }
 
-static bool	get_bit(uint8_t data, uint16_t bit)
+template <typename int_t>
+bool	get_bit(const int_t data, uint8_t bit)
 {
-	return data & (1 << bit % BYTE_SIZE);
+	return data & (static_cast<int_t>(1) << bit);
 }
 
 #endif // BIT_OPERATIONS_HPP
