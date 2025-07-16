@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 10:35:20 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/16 11:10:45 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 14:24:39 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,20 +21,27 @@ P_Iterator::P_Iterator(int16_t i) : iterator(i)
 
 P_Iterator&	P_Iterator::operator++()
 {
-	++iterator;
-	return *this;
+	return operator+=(1);
 }
 
-P_Iterator&	P_Iterator::operator+=(const int16_t incr_val)
+P_Iterator&	P_Iterator::operator+=(const uint16_t incr_val)
 {
-	iterator += incr_val;
+	uint16_t	tmp = iterator & (LARGE_ITER_BIT - 1);
+	
+	if (iterator >= LARGE_ITER_BIT || incr_val >= LARGE_ITER_BIT)
+	{
+		iterator = (tmp + incr_val) % LARGE_ITER_BIT | LARGE_ITER_BIT;
+	}
+	else
+	{
+		iterator += incr_val;
+	}
 	return *this;
 }
 
 P_Iterator&	P_Iterator::operator++(int)
 {
-	++iterator;
-	return *this;
+	return operator+=(1);
 }
 
 bool	P_Iterator::update_iterator(const int16_t i_can)
@@ -46,7 +53,7 @@ bool	P_Iterator::update_iterator(const int16_t i_can)
 		mtx_out.lock();
 		std::cout << "CURRENT ITERATOR: " << iterator << " NEW ITERATOR: " << i_can + 1 << std::endl;
 		mtx_out.unlock();
-		iterator = i_can + 1;
+		operator+=(i_can + 1);
 		result = true;
 	}
 	return result;

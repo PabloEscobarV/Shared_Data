@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 12:03:45 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/16 11:10:45 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 14:24:36 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ class	P_Iterator
 		P_Iterator(int16_t i = 0);
 		P_Iterator&	operator++();
 		P_Iterator&	operator++(int);
-		P_Iterator&	operator+=(const int16_t incr_val);
+		P_Iterator&	operator+=(const uint16_t incr_val);
 		inline operator int16_t() const { return iterator; }
 		inline int16_t	get_iterator() const { return iterator; }
 		bool		update_iterator(const int16_t i_can);
@@ -34,7 +34,7 @@ class	P_Iterator
 		{
 			return get_diff(i_primary, i_secondary) > ITER_DIFF;
 		}
-		static inline uint16_t	get_diff(const uint16_t i_primary, const uint16_t i_secondary)
+		static inline int16_t	get_diff(const uint16_t i_primary, const uint16_t i_secondary)
 		{
 			return static_cast<int32_t>(i_primary - i_secondary);
 		}
@@ -44,7 +44,7 @@ class	P_Iterator
 			iterator = i;
 		}
 	private:
-		static const uint8_t	LARGE_ITER_BIT = INT16_MAX + 1;
+		static const uint16_t	LARGE_ITER_BIT = INT16_MAX + 1;
 		uint16_t		iterator;
 };
 

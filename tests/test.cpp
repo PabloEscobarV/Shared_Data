@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:26:38 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/16 11:21:26 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 14:26:34 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 #include <iostream>
 
 using namespace std;
+
+static const uint8_t LARGE_ITER_BIT = 128;
 
 // bool	check_iterator(const int8_t i_primary, const int8_t i_secondary)
 // {
@@ -38,7 +40,7 @@ using namespace std;
 
 int8_t get_diff(const uint8_t i_primary, const uint8_t i_secondary)
 {
-	return static_cast<int8_t>(i_primary - i_secondary);
+	return static_cast<int16_t>(i_primary - i_secondary);
 }
 
 int8_t check_iterator(const uint8_t i_primary, const uint8_t i_secondary)
@@ -51,11 +53,26 @@ int8_t check_iterator(const uint8_t i_primary, const uint8_t i_secondary)
 	return diff > 2;
 }
 
+void incr_iter(uint8_t iterator, uint8_t incr_val)
+{
+	uint8_t	tmp = iterator & (LARGE_ITER_BIT - 1);
+	
+	if (iterator >= LARGE_ITER_BIT || incr_val >= LARGE_ITER_BIT)
+	{
+		iterator = (tmp + incr_val) % LARGE_ITER_BIT | LARGE_ITER_BIT;
+	}
+	else
+	{
+		iterator += incr_val;
+	}
+}
+
 int main()
 {
-	for (int16_t i = 0; i < 500; ++i)
+	for (int16_t i = 0; i < 255; ++i)
 	{
-		check_iterator((i + 97), (i + 100));
+		check_iterator((i + 3) % 128, (i) % 128);
+		incr_iter(1, 1 - 2);
 	}
 	return 0;
 }
