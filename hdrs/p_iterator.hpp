@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 12:03:45 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/15 14:11:43 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 11:10:45 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,7 @@ class	P_Iterator
 {
 	public:
 		static const uint8_t	ITER_DIFF = 1;
-		static const int16_t	ITERATOR_NO_VALID = INT16_MIN;
-		static const int16_t	ITERATOR_VALID_FIRST = 0;
-		P_Iterator(int16_t i = ITERATOR_NO_VALID);
+		P_Iterator(int16_t i = 0);
 		P_Iterator&	operator++();
 		P_Iterator&	operator++(int);
 		P_Iterator&	operator+=(const int16_t incr_val);
@@ -36,9 +34,9 @@ class	P_Iterator
 		{
 			return get_diff(i_primary, i_secondary) > ITER_DIFF;
 		}
-		static inline int16_t	get_diff(const int16_t i_primary, const int16_t i_secondary)
+		static inline uint16_t	get_diff(const uint16_t i_primary, const uint16_t i_secondary)
 		{
-			return static_cast<int64_t>(i_primary - i_secondary);
+			return static_cast<int32_t>(i_primary - i_secondary);
 		}
 		// TEST PURPOSES ONLY
 		inline void	set_iterator(int16_t i)
@@ -46,16 +44,8 @@ class	P_Iterator
 			iterator = i;
 		}
 	private:
-		int16_t		iterator;
-		static inline bool is_no_valid_iterator(int16_t i)
-		{
-			return (i == ITERATOR_NO_VALID);
-		}
-		static inline int16_t	check_no_valid_iterator(int16_t i)
-		{
-			if (i < 0 && i >= ITERATOR_NO_VALID) { return ITERATOR_VALID_FIRST; }
-				return i;
-		}
+		static const uint8_t	LARGE_ITER_BIT = INT16_MAX + 1;
+		uint16_t		iterator;
 };
 
 #endif // P_ITERATOR_HPP

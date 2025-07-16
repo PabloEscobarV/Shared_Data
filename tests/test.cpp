@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:26:38 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/15 13:45:14 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 11:21:26 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,12 +36,12 @@ using namespace std;
 // 	return result;
 // }
 
-int8_t get_diff(const int8_t i_primary, const int8_t i_secondary)
+int8_t get_diff(const uint8_t i_primary, const uint8_t i_secondary)
 {
 	return static_cast<int8_t>(i_primary - i_secondary);
 }
 
-int8_t check_iterator(const int8_t i_primary, const int8_t i_secondary)
+int8_t check_iterator(const uint8_t i_primary, const uint8_t i_secondary)
 {
 	int32_t diff = get_diff(i_primary, i_secondary);
 	cout << "I_PRIMARY: " << (int)i_primary
@@ -53,9 +53,9 @@ int8_t check_iterator(const int8_t i_primary, const int8_t i_secondary)
 
 int main()
 {
-	for (int8_t i = 0; i < 127; ++i)
+	for (int16_t i = 0; i < 500; ++i)
 	{
-		check_iterator(i + 100, i + 98);
+		check_iterator((i + 97), (i + 100));
 	}
 	return 0;
 }
