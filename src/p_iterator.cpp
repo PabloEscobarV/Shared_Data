@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 10:35:20 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/16 08:55:00 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 12:47:18 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include "../hdrs/bit_operations.hpp"
 
 #include <iostream>
+#include <unistd.h>
 
 P_Iterator::P_Iterator(int16_t i) : iterator(i)
 {
@@ -41,6 +42,17 @@ void	P_Iterator::set_iterator(int16_t i)
 	iterator = (iterator & MASK_HIGHER_BYTE) | (static_cast<uint8_t>(i));
 }
 
+bool P_Iterator::check_iterators(int16_t i_primary, int16_t i_secondary)
+{
+	bool result = false;
+	
+	if (get_bit(i_primary, SYNCHRONIZE_BIT) && get_bit(i_secondary, SYNCHRONIZE_BIT))
+	{
+		result = get_diff(static_cast<int8_t>(i_primary), static_cast<int8_t>(i_secondary)) > ITER_DIFF;
+	}
+	return result;
+}
+
 bool	P_Iterator::update_iterator(const int16_t i_can)
 {
 	bool result = false;
@@ -62,20 +74,17 @@ bool	P_Iterator::update_non_sync_iterator(int16_t i_can)
 
 	if (get_bit(i_can, SYNCHRONIZE_BIT))
 	{
-		mtx_out.lock();
-		std::cout << "CURRENT ITERATOR (CAN-SYNC): " << iterator << " NEW ITERATOR: " << i_can + 1 << std::endl;
-		mtx_out.unlock();
-		set_iterator(i_can);
-		set_bit(iterator, SYNCHRONIZE_BIT, true);
+		set_iterator(static_cast<uint8_t>(i_can));
 		result = true;
 	}
-	else
-	{
-		mtx_out.lock();
-		std::cout << "CURRENT ITERATOR (NON-CAN-SYNC): " << iterator << " NEW ITERATOR: " << i_can + 1 << std::endl;
-		mtx_out.unlock();
-		set_bit(iterator, SYNCHRONIZE_BIT, true);
-	}
+	set_bit(iterator, SYNCHRONIZE_BIT, true);
+	mtx_out.lock();
+	std::cout << " UPDATE NON-SYNC ITERATOR" << std::endl
+			<< "PID: " << getpid() << std::endl
+			<< " ITERATOR: " << iterator << std::endl
+			<< " ITERATOR CAN: " << i_can << std::endl
+			<< " RESULT: " << result << std::endl;
+	mtx_out.unlock();
 	return result;
 }
 
@@ -86,9 +95,14 @@ bool	P_Iterator::update_sync_iterator(int16_t i_can)
 	if (get_bit(i_can, SYNCHRONIZE_BIT) && check_iterators(i_can, iterator))
 	{
 		mtx_out.lock();
-		std::cout << "CURRENT ITERATOR (SYNCHRO): " << iterator << " NEW ITERATOR: " << i_can + 1 << std::endl;
+		std::cout << "UPDATE SYNC ITERATOR" << std::endl
+				<< "PID: " << getpid() << std::endl
+				<< " ITERATOR: " << iterator << std::endl
+				<< " ITERATOR CAN: " << i_can << std::endl
+				<< " RESULT: " << result << std::endl;
 		mtx_out.unlock();
 		iterator = (iterator & MASK_HIGHER_BYTE) | (static_cast<uint8_t>(i_can) + 1);
+		set_iterator(static_cast<uint8_t>(i_can + 1));
 		result = true;
 	}
 	return result;

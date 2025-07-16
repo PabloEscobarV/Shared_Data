@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/14 13:55:51 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/14 14:05:27 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/16 12:10:24 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ int main()
 
 	cout << "Enter the number of simulations: ";
 	cin >> count;
-	system("gnome-terminal -- bash -c 'g++ test.cpp src/* -o test'");
+	system("gnome-terminal -- bash -c 'g++ test.cpp src/*.cpp -o test'");
 	while (count)
 	{
 		system("gnome-terminal -- bash -c './test; echo; echo Application Finished; echo Press Enter to continue ...; read'");
