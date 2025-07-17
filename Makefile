@@ -44,8 +44,20 @@ run_quick: test_full_algorithm
 test_queue: test_queue_swap_fixed.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
+# Ultimate comprehensive test
+test_ultimate_100_final: test_ultimate_100_final.cpp $(SOURCES)
+	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) -o $@ $^
+
+# SSE working test
+test_sse_working: test_sse_working.cpp $(SOURCES)
+	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) -o $@ $^
+
+# Improved SSE test
+test_improved_sse: test_improved_sse.cpp $(SOURCES)
+	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) -o $@ $^
+
 # Clean targets
 clean:
-	rm -f test test_enhanced test_minimal test_silent test_debug test_full_algorithm test_full_algorithm_debug test_queue
+	rm -f test test_enhanced test_minimal test_silent test_debug test_full_algorithm test_full_algorithm_debug test_queue test_ultimate_100_final test_sse_working test_improved_sse
 
 .PHONY: all run run_debug run_quick clean

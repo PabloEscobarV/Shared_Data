@@ -13,6 +13,6 @@
 #ifndef TEST_HPP
 #define TEST_HPP
 
-#define P_COUNT 3
+#define P_COUNT 64
 
 #endif // TEST_HPP
