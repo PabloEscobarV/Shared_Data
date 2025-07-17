@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 12:03:45 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/16 12:37:57 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/17 12:20:16 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ class	P_Iterator
 		P_Iterator&	operator+=(const int16_t incr_val);
 		inline operator int16_t() const { return iterator; }
 		inline int16_t	get_iterator_num() const { return iterator & 255; }
+		inline int16_t	get_iterator_num(int16_t iter) const { return iter & 255; }
 		bool		update_iterator(const int16_t i_can);
 		static bool check_iterators(int16_t i_primary, int16_t i_secondary);
 		static inline int8_t	get_diff(const int8_t i_primary, const int8_t i_secondary)

@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/16 12:47:36 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/17 12:22:07 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,14 +136,16 @@ bool	SharedParam::is_req_update_param_value(const ssv_message_t& message, uint16
 {
 	bool	is_req = message.param_val != get_param_value();
 
-	// mtx_out.lock();
-	// cout << "PID: " << getpid() 
-	// 			<< " PID CAN: " << idx_can
-	// 			<< " PARAM NUMBER: " << message.param_num
-	// 			<< " PARAM VALUE: " << message.param_val
-	// 			<< " ITERATOR: " << (message.iterator & 255)
-	// 			<< endl;
-	// mtx_out.unlock();
+	mtx_out.lock();
+	cout << "------========++++ SSV REQUEST ++++========------" << endl;
+	cout << "PID: " << getpid() << endl
+				<< "PID CAN: " << idx_can << endl
+				<< "PARAM NUMBER: " << message.param_num << endl
+				<< "PARAM VALUE: " << message.param_val << endl
+				<< "CURRENT ITERATOR: " << iterator.get_iterator_num() << endl
+				<< "CAN ITERATOR: " << iterator.get_iterator_num(message.iterator) << endl;
+	cout << "------========++++ SSV REQUEST ++++========------" << endl;
+	mtx_out.unlock();
 	if (!iterator.update_iterator(message.iterator))
 	{
 		if (P_Iterator::check_iterators(iterator, message.iterator))

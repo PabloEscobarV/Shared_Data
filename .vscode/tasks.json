@@ -8,7 +8,7 @@
         "-fdiagnostics-color=always",
         "-g",
         "${file}",
-        "src/*.cpp",
+        "src/*",
         "-o",
         "${fileDirname}/${fileBasenameNoExtension}"
       ],

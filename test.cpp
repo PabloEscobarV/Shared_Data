@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/16 12:37:59 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/17 13:35:06 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,13 +30,13 @@
 #include <sys/mman.h>
 #include <mutex>
 
-#define SEND_DURATION		1000 // Duration in milliseconds for sending messages
+#define SEND_DURATION		50000 // Duration in milliseconds for sending messages
 #define SSV_SLEEP_TIME	300
 #define TIME_20_MS			20 // Timeout in milliseconds for SSV messages
 #define INVALID_SOCKET	-1
 #define MULTICAST_PORT  12345
 #define MULTICAST_IP    "239.0.0.1"
-#define TICK_PERIOD			20 // Period in milliseconds for the tick counter
+#define TICK_PERIOD			10 // Period in milliseconds for the tick counter
 
 using namespace std;
 
@@ -58,19 +58,18 @@ void die(const char* message)
   exit(1);
 }
 
-void	send(udp_data_t& udp_data, SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_data)
+void	send(udp_data_t& udp_data, uint16_t ssrv_freq = 0,  SharedData<P_COUNT> *shared_data = nullptr, ParamData<P_COUNT> *param_data = nullptr)
 {
 	can_data_t	can_data {};
-	uint16_t		send_ssrv_time = rand() % 50 + 1;
 
 	can_data.idx_can = getpid();
 	mtx_out.lock();
-	cout << "send_ssrv_time: " << send_ssrv_time << endl;
+	cout << "ssrv_freq: " << ssrv_freq << endl;
 	mtx_out.unlock();
 	for (int i = 0; i < SEND_DURATION; ++i)
 	{
 		shared_data->period_counter();
-		// if (i != 0 && !(send_ssrv_time % (i)))
+		// if (i != 0 && ssrv_freq != 0 && !(ssrv_freq % (i)))
 		// 	shared_data->add_ssrv_message(param_data->get_param_num(rand() % (P_COUNT)), rand() % 1000);
 		if (shared_data->get_messages(can_data))
 		{
@@ -162,7 +161,7 @@ udp_data_t	create_receive_socket()
 	return udp_data;
 }
 
-void	crt_trhreads(SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_data, ParamData<P_COUNT> *old_param_data)
+void	crt_trhreads(uint16_t ssrv_freq, SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_data, ParamData<P_COUNT> *old_param_data)
 {
 	thread receiver_thread([&]()
 	{
@@ -179,7 +178,7 @@ void	crt_trhreads(SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_da
 	cout << "Sender thread started." << endl;
 	mtx_out.unlock();
 	udp_data_t udp_data_sender = sender_socket();
-	send(udp_data_sender, shared_data, param_data);
+	send(udp_data_sender, ssrv_freq, shared_data, param_data);
 	close(udp_data_sender.sock_fd);
 	exit(0);
 	// });
@@ -218,23 +217,44 @@ void	init_shared_data(SharedData<P_COUNT> *shared_data,
 	}
 }
 
-int main()
+int main(int argc, char ** argv)
 {
-	int16_t iterator_start_value;
+	int16_t iterator_start_value = 0;
 	uint16_t param_kef = 0;
+	uint16_t ssrv_freq = 0;
 	param_data = new ParamData<P_COUNT>();
 	old_param_data = new ParamData<P_COUNT>();
 	shared_data = new SharedData<P_COUNT>();
 	srand(time(NULL) + getpid()); // Seed random number generator with current time and process ID
 	
-	cout << "Enter iterator start value: \n";
-	cin >> iterator_start_value;
-	cout << "Enter parameter step kef: \n";
-	cin >> param_kef;
+	if (argc > 1)
+		iterator_start_value = atoi(argv[1]);
+	if (argc > 2)
+		param_kef = atoi(argv[2]);
+	if (argc > 3)
+		ssrv_freq = atoi(argv[3]);
+	cout << "PID: " << getpid() << endl;
+	if (argc < 2)
+	{
+		cout << "Enter iterator start value: \n";
+		cin >> iterator_start_value;
+		cin.get();
+	}
+	if (argc < 3)
+	{
+		cout << "Enter parameter step kef: \n";
+		cin >> param_kef;
+		cin.get();
+	}
+	if (argc < 4)
+	{
+		cout << "Enter ssrv frequency (0 for no ssrv messages): \n";
+		cin >> ssrv_freq;
+	}
 	init_param_data(param_data, old_param_data,  param_kef);
 	init_shared_data(shared_data, param_data, iterator_start_value);
 	print_param_data(param_data);
-	crt_trhreads(shared_data, param_data, old_param_data);
+	crt_trhreads(ssrv_freq, shared_data, param_data, old_param_data);
 	delete param_data;
 	delete shared_data;
 }
