@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   p_iterator.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 12:03:45 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/17 12:20:16 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/17 23:19:35 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,20 @@ class	P_Iterator
 		inline int16_t	get_iterator_num(int16_t iter) const { return iter & 255; }
 		bool		update_iterator(const int16_t i_can);
 		static bool check_iterators(int16_t i_primary, int16_t i_secondary);
-		static inline int8_t	get_diff(const int8_t i_primary, const int8_t i_secondary)
-		{
-			return static_cast<int16_t>(i_primary - i_secondary);
+	static inline int8_t	get_diff(const int8_t i_primary, const int8_t i_secondary)
+	{
+		// Handle 8-bit wraparound correctly
+		int16_t diff = static_cast<uint8_t>(i_primary) - static_cast<uint8_t>(i_secondary);
+		
+		// Handle wraparound: if absolute difference > 128, adjust for wraparound
+		if (diff > 127) {
+			diff -= 256;  // i_primary is actually behind due to wraparound
+		} else if (diff < -127) {
+			diff += 256;  // i_primary is actually ahead due to wraparound  
 		}
+		
+		return static_cast<int8_t>(diff);
+	}
 		// TEST PURPOSES ONLY
 		void	set_iterator(int16_t i);
 	private:

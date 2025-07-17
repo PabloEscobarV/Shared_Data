@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shared_data.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 08:54:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/15 07:55:41 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/17 23:19:33 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,12 +70,13 @@ class SharedData
 			uint8_t	counter;
 			uint8_t	idx;
 		};
-		static const uint8_t	QUEUE_SIZE = count / 5;
-		static const uint8_t	SSV_PERIOD = 5;	
-		static const uint8_t	SSRV_PERIOD = 2;
-		static const uint8_t	SSE_PERIOD = 5;
-		static const uint8_t	SSRV_ATTEMPTS = 3;
-		static const uint8_t	SSRV_WAIT_TICKS = 25;
+		static const uint8_t	QUEUE_SIZE = (count < 10) ? 3 : count / 5;
+		static const uint8_t	SSV_PERIOD = 5;		// 100ms (5 * 20ms ticks)
+		static const uint8_t	SSRV_PERIOD = 2;	// 40ms (2 * 20ms ticks)  
+		static const uint8_t	SSE_PERIOD = 5;		// 100ms (5 * 20ms ticks)
+		static const uint8_t	SSRV_ATTEMPTS = 3;	// Send SSRV 3 times
+		static const uint8_t	SSRV_WAIT_TICKS = 25;	// 500ms wait (25 * 20ms ticks)
+		static const uint8_t	SSE_ATTEMPTS = 3;	// Send SSE 3 times
 		uint8_t		tick;
 		uint16_t	idx_ssv;
 		SharedParam	shared_params[count];
@@ -124,8 +125,21 @@ bool	SharedData<count>::add_ssrv_message(uint16_t param_num, int32_t new_param_v
 
 	if (new_message.idx < count)
 	{
-		shared_params[new_message.idx].add_new_param_value(new_param_val, SSRV_ATTEMPTS);
+		bool add_result = shared_params[new_message.idx].add_new_param_value(new_param_val, SSRV_ATTEMPTS);
+		
+		#ifdef DEBUG_SSRV
+		cout << "PID: " << getpid() << " add_new_param_value result: " << add_result << endl;
+		cout << "PID: " << getpid() << " ssrv_queue count before push: " << static_cast<int>(ssrv_queue.get_count()) << endl;
+		cout << "PID: " << getpid() << " ssrv_queue is_full: " << ssrv_queue.is_full() << endl;
+		#endif
+		
 		result = ssrv_queue.push(new_message);
+		
+		#ifdef DEBUG_SSRV
+		cout << "PID: " << getpid() << " ssrv_queue.push result: " << result << endl;
+		cout << "PID: " << getpid() << " ssrv_queue count after push: " << static_cast<int>(ssrv_queue.get_count()) << endl;
+		#endif
+		
 		cout << "PID: " << getpid() 
 					<< " PARAM NUMBER: " << param_num
 					<< " NEW PARAM VALUE: " << new_param_val
@@ -328,7 +342,7 @@ bool	SharedData<count>::handle_ssv_message(const ssv_message_t &message,
 {
 	sse_service_t	sse_service
 	{
-		.counter = SSRV_ATTEMPTS,
+		.counter = SSE_ATTEMPTS,  // Send SSE 3 times if error occurs
 		.idx = get_idx(message.param_num),
 	};
 	bool	result = false; 

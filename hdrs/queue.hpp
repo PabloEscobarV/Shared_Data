@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   queue.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 07:56:22 by BlackRider        #+#    #+#             */
-/*   Updated: 2025/07/14 11:14:27 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/17 23:19:35 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,19 +83,32 @@ bool FSQueue<data_t, size>::pop()
 template <typename data_t, uint8_t size>
 void FSQueue<data_t, size>::swap(uint16_t swap_item)
 {
-	uint8_t swap_idx = 0;
-	data_t temp = data[head];
-
+	if (count <= 1 || swap_item == 0) 
+		return; // Nothing to swap
+	
+	// Ensure swap_item is within valid range  
 	if (swap_item >= count)
 	{
-		swap_item = count - 1; // Adjust to the last valid index
+		swap_item = count - 1;
 	}
-	swap_idx = (head + swap_item) % size;
-	if (swap_idx != head)
+	
+	// Store the head element that will be moved to swap position
+	data_t head_element = data[head];
+	
+	// Shift all elements from position 1 to swap_item one position left
+	// This moves elements [1,2,3] to positions [0,1,2] when swap_item=3
+	for (uint16_t i = 0; i < swap_item; i++)
 	{
-		data[head] = data[swap_idx];
-		data[swap_idx] = temp;
+		uint8_t current_idx = (head + i) % size;
+		uint8_t next_idx = (head + i + 1) % size;
+		data[current_idx] = data[next_idx];
 	}
+	
+	// Place the original head element at the swap position
+	uint8_t final_swap_idx = (head + swap_item) % size;
+	data[final_swap_idx] = head_element;
+	
+	// Result: [0,1,2,3,4,5,6] with swap_item=3 becomes [1,2,3,0,4,5,6]
 }
 
 template <typename data_t, uint8_t size>

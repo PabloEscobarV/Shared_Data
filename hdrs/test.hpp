@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   test.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:28:21 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/17 14:21:07 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/17 23:19:35 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef TEST_HPP
 #define TEST_HPP
 
-#define P_COUNT 1
+#define P_COUNT 3
 
 #endif // TEST_HPP
