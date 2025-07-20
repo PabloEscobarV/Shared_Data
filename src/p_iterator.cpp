@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   p_iterator.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 10:35:20 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/16 14:24:39 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/20 22:28:59 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 #include <iostream>
 
-P_Iterator::P_Iterator(int16_t i) : iterator(i)
+P_Iterator::P_Iterator(uint16_t i) : iterator(i)
 {
 	
 }
@@ -44,18 +44,44 @@ P_Iterator&	P_Iterator::operator++(int)
 	return operator+=(1);
 }
 
-bool	P_Iterator::update_iterator(const int16_t i_can)
+bool	P_Iterator::check_iterators(uint16_t i_primary, uint16_t i_secondary)
 {
 	bool result = false;
 
-	if (get_diff(i_can, iterator) > ITER_DIFF)
+	// Check large bit status
+	bool primary_large = (i_primary >= LARGE_ITER_BIT);
+	bool secondary_large = (i_secondary >= LARGE_ITER_BIT);
+
+	if (primary_large && !secondary_large)
 	{
-		mtx_out.lock();
-		std::cout << "CURRENT ITERATOR: " << iterator << " NEW ITERATOR: " << i_can + 1 << std::endl;
-		mtx_out.unlock();
-		operator+=(i_can + 1);
+		// Primary has large bit, secondary doesn't - primary is newer
 		result = true;
+	}
+	else if (!primary_large && secondary_large)
+	{
+		// Secondary has large bit, primary doesn't - secondary is older
+		result = false;
+	}
+	else
+	{
+		// Both have same large bit status, compare normally
+		result = get_diff(i_primary, i_secondary) > ITER_DIFF;
 	}
 	return result;
 }
 
+bool	P_Iterator::update_iterator(const uint16_t i_can)
+{
+	bool result = false;
+
+	if (check_iterators(i_can, iterator))
+	{
+		mtx_out.lock();
+		std::cout << "CURRENT ITERATOR: " << iterator << " NEW ITERATOR: " << i_can + 1 << std::endl;
+		mtx_out.unlock();
+		// Fix: Set iterator to i_can + 1, don't add to current iterator
+		iterator = i_can + 1;
+		result = true;
+	}
+	return result;
+}

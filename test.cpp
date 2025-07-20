@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/15 13:38:18 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/20 22:18:44 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -220,13 +220,14 @@ void	init_shared_data(SharedData<P_COUNT> *shared_data,
 
 int main()
 {
-	int16_t iterator_start_value;
+	uint16_t iterator_start_value;
 	uint16_t param_kef = 0;
 	param_data = new ParamData<P_COUNT>();
 	old_param_data = new ParamData<P_COUNT>();
 	shared_data = new SharedData<P_COUNT>();
 	srand(time(NULL) + getpid()); // Seed random number generator with current time and process ID
 	
+	cout << "PID: " << getpid() << endl;
 	cout << "Enter iterator start value: \n";
 	cin >> iterator_start_value;
 	cout << "Enter parameter step kef: \n";

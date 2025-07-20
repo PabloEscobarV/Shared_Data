@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:26:38 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/16 14:26:34 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/20 21:55:24 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ int8_t check_iterator(const uint8_t i_primary, const uint8_t i_secondary)
 	return diff > 2;
 }
 
-void incr_iter(uint8_t iterator, uint8_t incr_val)
+void incr_iter(uint8_t& iterator, uint8_t incr_val)
 {
 	uint8_t	tmp = iterator & (LARGE_ITER_BIT - 1);
 	
@@ -69,10 +69,13 @@ void incr_iter(uint8_t iterator, uint8_t incr_val)
 
 int main()
 {
-	for (int16_t i = 0; i < 255; ++i)
+	uint8_t iterator = 127;
+	
+	for (int16_t i = 0; i < 400; ++i)
 	{
-		check_iterator((i + 3) % 128, (i) % 128);
-		incr_iter(1, 1 - 2);
+		// check_iterator((i + 3) % 128, (i) % 128);
+		incr_iter(iterator, 1);
+		cout << "ITERATOR: " << (int)iterator << endl;
 	}
 	return 0;
 }
