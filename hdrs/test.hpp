@@ -3,16 +3,35 @@
 /*                                                        :::      ::::::::   */
 /*   test.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:28:21 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/20 22:29:05 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/21 10:28:04 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef TEST_HPP
 #define TEST_HPP
 
-#define P_COUNT 3
+#include <sys/socket.h>    // Basic socket functions
+#include <netinet/in.h>    // sockaddr_in structure
+#include <arpa/inet.h>     // inet_addr(), inet_ntoa(), etc.
+
+#define P_COUNT 64
+
+struct	udp_data_t
+{
+	int 				sock_fd;
+	sockaddr_in remote_addr;
+};
+
+struct	ssrv_data_t
+{
+	uint16_t	id;
+	uint16_t	param_idx;
+	int32_t		param_val;
+};
+
+uint16_t get_pid();
 
 #endif // TEST_HPP
