@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 06:51:11 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/21 09:59:45 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/21 14:50:39 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@
 using namespace std;
 
 #define INVALID_SOCKET	-1
-#define MULTICAST_PORT  12346
+#define MULTICAST_SSRV_PORT  12346
 #define MULTICAST_SSRV_IP    "239.1.1.1"
 
 void die(const char* message) 
@@ -42,7 +42,7 @@ void die(const char* message)
   exit(1);
 }
 
-udp_data_t	sender_socket(const char* multicast_ip = MULTICAST_SSRV_IP, uint16_t multicast_port = MULTICAST_PORT)
+udp_data_t	sender_socket(const char* multicast_ip = MULTICAST_SSRV_IP, uint16_t multicast_port = MULTICAST_SSRV_PORT)
 {
 	int	sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
 	sockaddr_in	remote_addr {};
@@ -58,7 +58,7 @@ udp_data_t	sender_socket(const char* multicast_ip = MULTICAST_SSRV_IP, uint16_t 
 	return udp_data;
 }
 
-udp_data_t	create_receive_socket(const char* multicast_ip = MULTICAST_SSRV_IP, uint16_t multicast_port = MULTICAST_PORT)
+udp_data_t	create_receive_socket(const char* multicast_ip = MULTICAST_SSRV_IP, uint16_t multicast_port = MULTICAST_SSRV_PORT)
 {
 	int	reuse = 1;
 	int	socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -113,6 +113,63 @@ void	send_ssrv_start_message(const udp_data_t& udp_data)
 		if (sendto(udp_data.sock_fd, &ssrv_start_message, sizeof(ssrv_start_message), 0,
 				(struct sockaddr *)(&udp_data.remote_addr), sizeof(udp_data.remote_addr)) < 0)
 			die("sendto failed");
+	}
+}
+
+void	count_test_info(test_data_t	*test_info)
+{
+	static const float	percent = 100.0 / P_COUNT;
+	uint16_t	num_count = 0;
+	uint16_t	value_count = 0;
+	uint16_t	iterator_count = 0;
+
+	for (int i = 0; i < P_COUNT; ++i)
+	{
+		if (test_info[i].param_num != test_info[0].param_num)
+		{
+			++num_count;
+		}
+		if (test_info[i].iterator != test_info[0].iterator)
+		{
+			++iterator_count;
+		}
+		if (test_info[i].param_val != test_info[0].param_val)
+		{
+			++value_count;
+		}
+	}
+	cout << "Cycle: " << test_info[0].i << endl;
+	cout << "Diferent parameters: " << num_count * percent << " [%]" << endl;
+	cout << "Diferent iterators: " << iterator_count * percent << " [%]" << endl;
+	cout << "Diferent values: " << value_count * percent << " [%]" << endl;
+}
+
+void	handle_test_information(test_data_t& test_data)
+{
+	static uint16_t	i = 0;
+	static uint16_t	idx = test_data.i;
+	static test_data_t	*test_info = new test_data_t [P_COUNT] {};
+	
+	if (idx == test_data.i)
+	{
+		test_info[i] = test_data;
+		++i;
+	}
+	if (i >= P_COUNT)
+		count_test_info(test_info);
+}
+
+void	receive_start_message(const udp_data_t& udp_data)
+{
+	test_data_t test_data {};
+	socklen_t addr_len = sizeof(udp_data.remote_addr);
+	
+	while (true)
+	{
+		if (recvfrom(udp_data.sock_fd, &test_data, sizeof(test_data), 0,
+				(struct sockaddr *)(&udp_data.remote_addr), &addr_len) < 0)
+			die("recvfrom failed");
+		handle_test_information(test_data);
 	}
 }
 

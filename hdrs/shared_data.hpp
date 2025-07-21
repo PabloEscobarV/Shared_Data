@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 08:54:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/21 10:29:28 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/21 14:26:02 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,10 @@ class SharedData
 		{
 			shared_params[idx].set_iterator(i);
 		}
+		uint16_t get_iterator(uint16_t idx)
+		{
+			return shared_params[idx].get_param_iterator(idx);
+		}	
 	private:
 		struct ssrv_service_t
 		{

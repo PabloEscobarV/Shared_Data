@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/21 11:52:07 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/21 14:50:41 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@
 #define MULTICAST_PORT  			12345
 #define MULTICAST_SSRV_PORT 	12346   // For SSRV messages
 #define MULTICAST_IP    			"239.0.0.1"
-#define MULTICAST_SSRV_IP    "239.1.1.1"
+#define MULTICAST_SSRV_IP    	"239.1.1.1"
 #define TICK_PERIOD						20 // Period in milliseconds for the tick counter
 
 using namespace std;
@@ -97,6 +97,28 @@ void	send(udp_data_t& udp_data, SharedData<P_COUNT> *shared_data, ParamData<P_CO
 			check_param_data(param_data, old_param_data);
 		}
 		this_thread::sleep_for(chrono::milliseconds(TICK_PERIOD));
+	}
+}
+
+void	send_test_data(udp_data_t& udp_data, SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_data)
+{
+	test_data_t test_data {};
+	test_data.pid = get_pid();
+	test_data.iterator = 0;
+	test_data.i = 0;
+	
+	while (true)
+	{
+		for (int i = 0; i < P_COUNT; ++i)
+		{
+			test_data.param_num = param_data->get_param_num(i);
+			test_data.param_val = param_data->get_param_value(i);
+			test_data.iterator = shared_data->get_iterator(i);
+			if (sendto(udp_data.sock_fd, &test_data, sizeof(test_data), 0, (struct sockaddr*)&(udp_data.remote_addr), sizeof(udp_data.remote_addr)) < 0)
+				die("sendto failed");
+		}
+		++test_data.i;
+		this_thread::sleep_for(chrono::milliseconds(TICK_PERIOD * 2));
 	}
 }
 
@@ -189,6 +211,24 @@ udp_data_t	create_receive_socket(const char* multicast_ip = MULTICAST_IP, uint16
 
 void	crt_trhreads(SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_data, ParamData<P_COUNT> *old_param_data)
 {
+	thread	send_test_data_thread([&]()
+	{
+		mtx_out.lock();
+		cout << "Sender test data thread started." << endl;
+		mtx_out.unlock();
+		udp_data_t udp_data_sender = sender_socket(MULTICAST_SSRV_IP, MULTICAST_SSRV_PORT);
+		send_test_data(udp_data_sender, shared_data, param_data);
+		close(udp_data_sender.sock_fd);
+	});
+	thread sender_thread([&]()
+	{
+		mtx_out.lock();
+		cout << "Sender thread started." << endl;
+		mtx_out.unlock();
+		udp_data_t udp_data_sender = sender_socket();
+		send(udp_data_sender, shared_data, param_data);
+		close(udp_data_sender.sock_fd);
+	});
 	thread receiver_thread([&]()
 	{
 		mtx_out.lock();
@@ -207,17 +247,6 @@ void	crt_trhreads(SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_da
 		receive_ssrv_request(udp_data_ssrv_receiver, shared_data, param_data);
 		close(udp_data_ssrv_receiver.sock_fd);
 	});
-	// thread sender_thread([&]()
-	// {
-	mtx_out.lock();
-	cout << "Sender thread started." << endl;
-	mtx_out.unlock();
-	udp_data_t udp_data_sender = sender_socket();
-	send(udp_data_sender, shared_data, param_data);
-	close(udp_data_sender.sock_fd);
-	exit(0);
-	// });
-	// sender_thread.join();
 	receiver_thread.join();
 	ssrv_receiver_thread.join();
 }

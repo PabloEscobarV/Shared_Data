@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:28:21 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/21 10:28:04 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/21 14:21:12 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,15 @@ struct	ssrv_data_t
 {
 	uint16_t	id;
 	uint16_t	param_idx;
+	int32_t		param_val;
+};
+
+struct test_data_t
+{
+	uint16_t	pid;
+	uint16_t 	param_num;
+	uint16_t	iterator;
+	uint16_t	i;
 	int32_t		param_val;
 };
 

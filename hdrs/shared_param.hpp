@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:39:08 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/14 15:23:13 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/21 14:24:53 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,10 @@ class SharedParam
 		void	set_iterator(int16_t i)
 		{
 			iterator.set_iterator(i);
+		}
+		uint16_t	get_param_iterator(uint16_t idx) const
+		{
+			return iterator.get_iterator();
 		}
 	private:
 		static const uint8_t	SSRV_INCR_VALUE = 3;
