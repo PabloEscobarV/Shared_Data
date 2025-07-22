@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:28:21 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/22 12:41:34 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/22 16:10:34 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <netinet/in.h>    // sockaddr_in structure
 #include <arpa/inet.h>     // inet_addr(), inet_ntoa(), etc.
 
-#define P_COUNT 100
+#define P_COUNT 25
 
 struct	udp_data_t
 {

@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/22 13:08:09 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/22 15:48:32 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 #include <sys/mman.h>
 #include <mutex>
 
-#define SEND_DURATION					10000 // Duration in milliseconds for sending messages
+#define SEND_DURATION					100000 // Duration in milliseconds for sending messages
 #define SSV_SLEEP_TIME				100
 #define TIME_20_MS						20 // Timeout in milliseconds for SSV messages
 #define INVALID_SOCKET				-1
@@ -313,7 +313,8 @@ int main(int argc, char *argv[])
 	PID = getpid(); // Limit PID to 3 digits for easier reading
 	if (argc < 4)
 	{
-		cout << "PID: " << get_pid() << endl;
+		cout << "Enter process ID (PID): \n";
+		cin >> PID;
 		cout << "Enter iterator start value: \n";
 		cin >> iterator_start_value;
 		cout << "Enter parameter step kef: \n";
@@ -326,6 +327,7 @@ int main(int argc, char *argv[])
 		param_kef = static_cast<uint16_t>(atoi(argv[3]));
 		cout << "PID: " << get_pid() << endl;
 	}
+	cout << "PID: " << get_pid() << endl;
 	init_param_data(param_data, old_param_data,  param_kef);
 	init_shared_data(shared_data, param_data, iterator_start_value);
 	print_param_data(param_data);

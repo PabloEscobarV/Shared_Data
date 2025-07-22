@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/22 07:01:18 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/22 12:23:38 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/22 16:11:28 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,8 @@ using namespace std;
 #define INVALID_SOCKET	-1
 #define MULTICAST_TEST_PORT  12347
 #define MULTICAST_TEST_IP    "239.1.1.0"
+
+mutex mtx_common_data;
 
 struct most_popular_t
 {
@@ -128,8 +130,10 @@ most_popular_t find_most_popular_simple(const int* arr, int size)
 int	*get_int_arr(test_data_t **test_info, int size,  uint16_t param_idx)
 {
 	int *arr = new int[size];
+	mtx_common_data.lock();
 	for (int i = 0; i < size; ++i)
 		arr[i] = test_info[i][param_idx].param_val;
+	mtx_common_data.unlock();
 	return arr;
 }
 
@@ -144,33 +148,47 @@ int	get_test_data_size(test_data_t **test_info)
 	return size;
 }
 
-void	handle_test_information(test_data_t	**test_info)
+void	handle_test_information(test_data_t	**test_info, int size = 0)
 {
-	static const float	percent = 100.0 / P_COUNT;
+	static float	percent = 100.0 / (float)size;
 	
+	cout << "-----------==============++++++++++ RECEIVED TEST INFO ++++++++++==============-----------" << endl;
 	for (int i = 0; i < P_COUNT; ++i)
 	{
-		int *arr = get_int_arr(test_info, get_test_data_size(test_info), i);
-		most_popular_t most_popular = find_most_popular_simple(arr, get_test_data_size(test_info));
+		int *arr = get_int_arr(test_info, size, i);
+		most_popular_t most_popular = find_most_popular_simple(arr, size);
 		cout << "Most popular value for param " << test_info[0][i].param_num
 				 << ": " << most_popular.value << ", count: " << most_popular.count << ", " << most_popular.count * percent << " [%]" << endl;
 		delete[] arr;
 	}
+	cout << "-----------==============++++++++++ RECEIVED TEST INFO ++++++++++==============-----------" << endl;
 }
 
 void	receive_start_message(test_data_t	**test_info, const udp_data_t& udp_data)
 {
+	int size = get_test_data_size(test_info);
 	test_data_t test_data {};
 	socklen_t addr_len = sizeof(udp_data.remote_addr);
-	
+
+	thread receiver_thread([&]()
+	{
+		while (true)
+		{
+			handle_test_information(test_info, size);
+			this_thread::sleep_for(chrono::seconds(1));
+		}
+	});
+
 	while (true)
 	{
 		if (recvfrom(udp_data.sock_fd, &test_data, sizeof(test_data), 0,
 				(struct sockaddr *)(&udp_data.remote_addr), &addr_len) < 0)
 			die("recvfrom failed");
+		mtx_common_data.lock();
 		test_info[test_data.pid][test_data.param_idx] = test_data;
-		handle_test_information(test_info);
+		mtx_common_data.unlock();
 	}
+	receiver_thread.join();
 }
 
 test_data_t	**create_test_info_array(uint16_t count)
