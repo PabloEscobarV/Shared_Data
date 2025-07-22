@@ -6,13 +6,17 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/14 13:55:51 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/21 12:00:02 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/22 07:29:27 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#include "hdrs/test.hpp"
 
 #include <iostream>
 #include <cstdint>
 #include <limits>
+#include <unistd.h>
+#include <wait.h>
 
 using namespace std;
 
@@ -64,13 +68,46 @@ void	create_command(input_data_t& data)
 	}
 }
 
+// void	crt_test_proccess(input_data_t data)
+// {
+// 	int	*pid = new int[data.count];
+
+// 	for (int i = 0; i < data.count; ++i)
+// 	{
+// 		cout << "Creating process " << i + 1 << " of " << data.count << endl;
+// 		pid[i] = fork();
+// 		if (pid[i] < 0)
+// 		{
+// 			perror("Fork failed");
+// 			exit(EXIT_FAILURE);
+// 		}
+// 		if (pid[i] == 0) // Child process
+// 		{
+// 			if (data.kef > 1)
+// 			{
+// 				data.kef += i;
+// 			}
+// 			start_test(data.id + i, data.start_iter_val + data.count / 10 + i, data.kef);
+// 			exit(EXIT_SUCCESS);
+// 		}
+// 	}
+// 	for (int i = 0; i < data.count; ++i)
+// 	{
+// 		int status;
+// 		waitpid(pid[i], &status, 0);
+// 	}
+// }
+
 int main()
 {
 	int	count = 0;
-	system("gnome-terminal -- bash -c 'g++ test.cpp src/* -o test'");
-	input_data_t data = get_input_data();
 	string command;
+	input_data_t data = get_input_data();
 
+	system("gnome-terminal -- bash -c 'g++ test.cpp src/* -o test'");
+	// system("gnome-terminal -- bash -c 'g++ test_ssrv.cpp src/* -o test_ssrv'");
+	// system("gnome-terminal -- bash -c 'g++ test_info.cpp src/* -o test_info'");
+	// crt_test_proccess(get_input_data());
 	create_command(data);
 	return 0;
 }

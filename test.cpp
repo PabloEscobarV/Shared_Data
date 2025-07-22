@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/21 14:50:41 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/22 07:37:16 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,10 @@
 #define INVALID_SOCKET				-1
 #define MULTICAST_PORT  			12345
 #define MULTICAST_SSRV_PORT 	12346   // For SSRV messages
+#define MULTICAST_TEST_PORT  	12347   // For TEST messages
 #define MULTICAST_IP    			"239.0.0.1"
 #define MULTICAST_SSRV_IP    	"239.1.1.1"
+#define MULTICAST_TEST_IP    	"239.1.1.0"
 #define TICK_PERIOD						20 // Period in milliseconds for the tick counter
 
 using namespace std;
@@ -114,6 +116,7 @@ void	send_test_data(udp_data_t& udp_data, SharedData<P_COUNT> *shared_data, Para
 			test_data.param_num = param_data->get_param_num(i);
 			test_data.param_val = param_data->get_param_value(i);
 			test_data.iterator = shared_data->get_iterator(i);
+			test_data.param_idx = i;
 			if (sendto(udp_data.sock_fd, &test_data, sizeof(test_data), 0, (struct sockaddr*)&(udp_data.remote_addr), sizeof(udp_data.remote_addr)) < 0)
 				die("sendto failed");
 		}
@@ -216,7 +219,7 @@ void	crt_trhreads(SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_da
 		mtx_out.lock();
 		cout << "Sender test data thread started." << endl;
 		mtx_out.unlock();
-		udp_data_t udp_data_sender = sender_socket(MULTICAST_SSRV_IP, MULTICAST_SSRV_PORT);
+		udp_data_t udp_data_sender = sender_socket(MULTICAST_TEST_IP, MULTICAST_TEST_PORT);
 		send_test_data(udp_data_sender, shared_data, param_data);
 		close(udp_data_sender.sock_fd);
 	});
@@ -281,6 +284,22 @@ void	init_shared_data(SharedData<P_COUNT> *shared_data,
 		shared_data->set_iterator(i, i_start_value);
 	}
 }
+
+// void	start_test(uint16_t pid, uint16_t iterator_start_value, uint16_t param_kef)
+// {
+// 	param_data = new ParamData<P_COUNT>();
+// 	old_param_data = new ParamData<P_COUNT>();
+// 	shared_data = new SharedData<P_COUNT>();
+
+// 	srand(time(NULL) + get_pid() + getpid()); // Seed random number generator with current time and process ID
+// 	cout << "PID: " << get_pid() << endl;
+// 	init_param_data(param_data, old_param_data,  param_kef);
+// 	init_shared_data(shared_data, param_data, iterator_start_value);
+// 	print_param_data(param_data);
+// 	crt_trhreads(shared_data, param_data, old_param_data);
+// 	delete param_data;
+// 	delete shared_data;
+// }
 
 int main(int argc, char *argv[])
 {
