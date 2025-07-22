@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/22 07:37:16 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/22 13:08:09 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,6 +231,7 @@ void	crt_trhreads(SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_da
 		udp_data_t udp_data_sender = sender_socket();
 		send(udp_data_sender, shared_data, param_data);
 		close(udp_data_sender.sock_fd);
+		exit(0); // Exit after sending messages
 	});
 	thread receiver_thread([&]()
 	{

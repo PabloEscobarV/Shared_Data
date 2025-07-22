@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 06:51:11 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/22 07:59:38 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/22 12:36:57 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -170,8 +170,8 @@ void	receive_start_message(const udp_data_t& udp_data)
 int	main()
 {
 	udp_data_t udp_data_sender = sender_socket();
-	system("gnome-terminal -- bash -c 'g++ test_info.cpp src/* -o test_info'");
-	system("gnome-terminal -- bash -c './test_info; echo; echo Application Finished; echo Press Enter to continue ...; read'");
+	// system("gnome-terminal -- bash -c 'g++ test_info.cpp src/* -o test_info'");
+	// system("gnome-terminal -- bash -c './test_info; echo; echo Application Finished; echo Press Enter to continue ...; read'");
 	send_ssrv_start_message(udp_data_sender);
 	close(udp_data_sender.sock_fd);
 	return 0;

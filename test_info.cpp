@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/22 07:01:18 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/22 07:46:26 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/22 12:23:38 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,12 +29,19 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <mutex>
+#include <unordered_map>
 
 using namespace std;
 
 #define INVALID_SOCKET	-1
 #define MULTICAST_TEST_PORT  12347
 #define MULTICAST_TEST_IP    "239.1.1.0"
+
+struct most_popular_t
+{
+		int value;
+		int count;
+};
 
 void die(const char* message) 
 {
@@ -95,12 +102,59 @@ void	count_test_info(test_data_t	*test_info)
 	cout << "Diferent values: " << value_count * percent << " [%]" << endl;
 }
 
-void	handle_test_information(test_data_t	**test_info, test_data_t& test_data)
+most_popular_t find_most_popular_simple(const int* arr, int size)
 {
-	while (test_info)
+    int most_popular = arr[0];
+    int max_count = 0;
+		most_popular_t result;
+    
+    for (int i = 0; i < size; i++) {
+        int count = 0;
+        for (int j = 0; j < size; j++) {
+            if (arr[j] == arr[i]) {
+                count++;
+            }
+        }
+        if (count > max_count) {
+            max_count = count;
+            most_popular = arr[i];
+        }
+    }
+		result.value = most_popular;
+		result.count = max_count;
+		return result;
+}
+
+int	*get_int_arr(test_data_t **test_info, int size,  uint16_t param_idx)
+{
+	int *arr = new int[size];
+	for (int i = 0; i < size; ++i)
+		arr[i] = test_info[i][param_idx].param_val;
+	return arr;
+}
+
+int	get_test_data_size(test_data_t **test_info)
+{
+	int size = 0;
+	
+	while (test_info[size])
 	{
-		count_test_info(*test_info);
-		++test_info;
+		++size;
+	}
+	return size;
+}
+
+void	handle_test_information(test_data_t	**test_info)
+{
+	static const float	percent = 100.0 / P_COUNT;
+	
+	for (int i = 0; i < P_COUNT; ++i)
+	{
+		int *arr = get_int_arr(test_info, get_test_data_size(test_info), i);
+		most_popular_t most_popular = find_most_popular_simple(arr, get_test_data_size(test_info));
+		cout << "Most popular value for param " << test_info[0][i].param_num
+				 << ": " << most_popular.value << ", count: " << most_popular.count << ", " << most_popular.count * percent << " [%]" << endl;
+		delete[] arr;
 	}
 }
 
@@ -114,7 +168,8 @@ void	receive_start_message(test_data_t	**test_info, const udp_data_t& udp_data)
 		if (recvfrom(udp_data.sock_fd, &test_data, sizeof(test_data), 0,
 				(struct sockaddr *)(&udp_data.remote_addr), &addr_len) < 0)
 			die("recvfrom failed");
-		handle_test_information(test_data);
+		test_info[test_data.pid][test_data.param_idx] = test_data;
+		handle_test_information(test_info);
 	}
 }
 
@@ -137,7 +192,7 @@ int main()
 	cout << "Enter the number of proccess to receive: ";
 	cin >> count;
 	test_info = create_test_info_array(count);
-	receive_start_message(udp_data_receiver);
+	receive_start_message(test_info, udp_data_receiver);
 	close(udp_data_receiver.sock_fd);
 	for (int i = 0; i < count; ++i)
 	{

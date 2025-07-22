@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   p_iterator.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 10:35:20 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/20 22:28:59 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/22 12:45:49 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,9 +76,9 @@ bool	P_Iterator::update_iterator(const uint16_t i_can)
 
 	if (check_iterators(i_can, iterator))
 	{
-		mtx_out.lock();
-		std::cout << "CURRENT ITERATOR: " << iterator << " NEW ITERATOR: " << i_can + 1 << std::endl;
-		mtx_out.unlock();
+		// mtx_out.lock();
+		// std::cout << "CURRENT ITERATOR: " << iterator << " NEW ITERATOR: " << i_can + 1 << std::endl;
+		// mtx_out.unlock();
 		// Fix: Set iterator to i_can + 1, don't add to current iterator
 		iterator = i_can + 1;
 		result = true;
