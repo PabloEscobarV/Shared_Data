@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   p_iterator.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 12:03:45 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/20 22:34:56 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/23 14:57:58 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,18 @@ class	P_Iterator
 		static bool check_iterators(uint16_t i_primary, uint16_t i_secondary);
 		static inline int16_t	get_diff(const uint16_t i_primary, const uint16_t i_secondary)
 		{
-			// Simply calculate the difference between iterator values
-			return static_cast<int32_t>(i_primary - i_secondary);
+			// Proper wrap-around difference calculation
+			int32_t diff = static_cast<int32_t>(i_primary - i_secondary);
+			
+			if (diff >= static_cast<int32_t>(LARGE_ITER_BIT / 2))
+			{
+				diff -= LARGE_ITER_BIT;
+			}
+			if (diff <= -static_cast<int32_t>(LARGE_ITER_BIT / 2))
+			{
+				diff += LARGE_ITER_BIT;
+			}
+			return static_cast<int16_t>(diff);
 		}
 		// TEST PURPOSES ONLY
 		inline void	set_iterator(uint16_t i)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 14:26:38 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/20 21:55:24 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/23 15:32:14 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@
 
 using namespace std;
 
-static const uint8_t LARGE_ITER_BIT = 128;
+static const uint16_t 	LARGE_ITER_BIT = INT16_MAX + 1;
+static const uint16_t	ITER_DIFF = 1;
 
 // bool	check_iterator(const int8_t i_primary, const int8_t i_secondary)
 // {
@@ -38,24 +39,56 @@ static const uint8_t LARGE_ITER_BIT = 128;
 // 	return result;
 // }
 
-int8_t get_diff(const uint8_t i_primary, const uint8_t i_secondary)
+int16_t get_diff(const uint16_t i_primary, const uint16_t i_secondary)
 {
-	return static_cast<int16_t>(i_primary - i_secondary);
+	int32_t diff = static_cast<int32_t>(i_primary - i_secondary);
+	
+	if (diff >= LARGE_ITER_BIT / 2)
+	{
+		diff -= LARGE_ITER_BIT;
+	}
+	if (diff <= -LARGE_ITER_BIT / 2)
+	{
+		diff += LARGE_ITER_BIT;
+	}
+	return diff;
 }
 
-int8_t check_iterator(const uint8_t i_primary, const uint8_t i_secondary)
+bool	check_iterators(uint16_t i_primary, uint16_t i_secondary)
+{
+	bool result = false;
+
+	// Check large bit status
+	bool primary_large = (i_primary >= LARGE_ITER_BIT);
+	bool secondary_large = (i_secondary >= LARGE_ITER_BIT);
+
+	if (primary_large && !secondary_large)
+	{
+		// Primary has large bit, secondary doesn't - primary is newer
+		result = true;
+	}
+	if ((!primary_large && !secondary_large) || (primary_large && secondary_large))
+	{
+		// Both have same large bit status, compare normally
+		result = get_diff(i_primary, i_secondary) > ITER_DIFF;
+	}
+	return result;
+}
+
+int16_t check_iterator(const uint16_t i_primary, const uint16_t i_secondary)
 {
 	int32_t diff = get_diff(i_primary, i_secondary);
 	cout << "I_PRIMARY: " << (int)i_primary
 			<< " I_SECONDARY: " << (int)i_secondary
 			<< " DIFF: " << (int)get_diff(i_primary, i_secondary)
-			<< " RESULT: " << (diff > 1) << endl;
+			<< " RESULT(get_diff()): " << (diff > 1)
+			<< " RESULT (check_iterators()): " << (check_iterators(i_primary, i_secondary) ? "true" : "false") << endl;
 	return diff > 2;
 }
 
-void incr_iter(uint8_t& iterator, uint8_t incr_val)
+void incr_iter(uint16_t& iterator, uint16_t incr_val)
 {
-	uint8_t	tmp = iterator & (LARGE_ITER_BIT - 1);
+	uint16_t	tmp = iterator & (LARGE_ITER_BIT - 1);
 	
 	if (iterator >= LARGE_ITER_BIT || incr_val >= LARGE_ITER_BIT)
 	{
@@ -69,14 +102,34 @@ void incr_iter(uint8_t& iterator, uint8_t incr_val)
 
 int main()
 {
-	uint8_t iterator = 127;
-	
-	for (int16_t i = 0; i < 400; ++i)
+	uint16_t iterator1 = INT16_MAX * 2 - 200;
+	uint16_t iterator2 = INT16_MAX * 2 - 195;
+
+	for (int i = 0; i < 400; ++i)
 	{
-		// check_iterator((i + 3) % 128, (i) % 128);
-		incr_iter(iterator, 1);
-		cout << "ITERATOR: " << (int)iterator << endl;
+		incr_iter(iterator1, 1);
+		incr_iter(iterator2, 1);
+		check_iterator(iterator1, iterator2);
 	}
+
+	cout << "----------------===================++++++++++===================----------------\n";
+	iterator1 = INT16_MAX * 2 - 50;
+	iterator2 = 0;
+	for (int i = 0; i < 100; ++i)
+	{
+		incr_iter(iterator1, 1);
+		incr_iter(iterator2, 1);
+		check_iterator(iterator1, iterator2);
+	}
+
+	// uint8_t iterator = 127;
+	
+	// for (int16_t i = 0; i < 400; ++i)
+	// {
+	// 	// check_iterator((i + 3) % 128, (i) % 128);
+	// 	incr_iter(iterator, 1);
+	// 	cout << "ITERATOR: " << (int)iterator << endl;
+	// }
 	return 0;
 }
 

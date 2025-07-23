@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/15 10:35:20 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/22 12:45:49 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/23 15:28:35 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,12 +57,7 @@ bool	P_Iterator::check_iterators(uint16_t i_primary, uint16_t i_secondary)
 		// Primary has large bit, secondary doesn't - primary is newer
 		result = true;
 	}
-	else if (!primary_large && secondary_large)
-	{
-		// Secondary has large bit, primary doesn't - secondary is older
-		result = false;
-	}
-	else
+	if ((!primary_large && !secondary_large) || (primary_large && secondary_large))
 	{
 		// Both have same large bit status, compare normally
 		result = get_diff(i_primary, i_secondary) > ITER_DIFF;
