@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/22 07:01:18 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/22 16:11:28 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/25 15:53:26 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,9 +33,10 @@
 
 using namespace std;
 
-#define INVALID_SOCKET	-1
-#define MULTICAST_TEST_PORT  12347
-#define MULTICAST_TEST_IP    "239.1.1.0"
+#define INVALID_SOCKET				-1
+#define MULTICAST_TEST_PORT 	12347
+#define MULTICAST_TEST_IP    	"239.1.1.0"
+#define MAX_NO_UPDATED 				10
 
 mutex mtx_common_data;
 
@@ -76,65 +77,31 @@ udp_data_t	create_receive_socket(const char* multicast_ip = MULTICAST_TEST_IP, u
 	return udp_data;
 }
 
-void	count_test_info(test_data_t	*test_info)
+unordered_map<int, int> get_params_count(test_data_t **test_info, int size, uint16_t param_idx)
 {
-	static const float	percent = 100.0 / P_COUNT;
-	uint16_t	num_count = 0;
-	uint16_t	value_count = 0;
-	uint16_t	iterator_count = 0;
+	unordered_map<int, int> count_map;
 
-	for (int i = 0; i < P_COUNT; ++i)
-	{
-		if (test_info[i].param_num != test_info[0].param_num)
-		{
-			++num_count;
-		}
-		if (test_info[i].iterator != test_info[0].iterator)
-		{
-			++iterator_count;
-		}
-		if (test_info[i].param_val != test_info[0].param_val)
-		{
-			++value_count;
-		}
-	}
-	cout << "Cycle: " << test_info[0].i << endl;
-	cout << "Diferent parameters: " << num_count * percent << " [%]" << endl;
-	cout << "Diferent iterators: " << iterator_count * percent << " [%]" << endl;
-	cout << "Diferent values: " << value_count * percent << " [%]" << endl;
-}
-
-most_popular_t find_most_popular_simple(const int* arr, int size)
-{
-    int most_popular = arr[0];
-    int max_count = 0;
-		most_popular_t result;
-    
-    for (int i = 0; i < size; i++) {
-        int count = 0;
-        for (int j = 0; j < size; j++) {
-            if (arr[j] == arr[i]) {
-                count++;
-            }
-        }
-        if (count > max_count) {
-            max_count = count;
-            most_popular = arr[i];
-        }
-    }
-		result.value = most_popular;
-		result.count = max_count;
-		return result;
-}
-
-int	*get_int_arr(test_data_t **test_info, int size,  uint16_t param_idx)
-{
-	int *arr = new int[size];
-	mtx_common_data.lock();
 	for (int i = 0; i < size; ++i)
-		arr[i] = test_info[i][param_idx].param_val;
-	mtx_common_data.unlock();
-	return arr;
+	{
+		count_map[test_info[i][param_idx].param_val]++;
+	}
+	return count_map;
+}
+
+most_popular_t find_most_popular_simple(test_data_t **test_info, int size, uint16_t param_idx)
+{
+	most_popular_t result = {0, 0};
+	unordered_map<int, int> count_map = get_params_count(test_info, size, param_idx);
+
+	for (const auto& pair : count_map)
+	{
+		if (pair.second > result.count)
+		{
+			result.value = pair.first;
+			result.count = pair.second;
+		}
+	}	
+	return result;
 }
 
 int	get_test_data_size(test_data_t **test_info)
@@ -151,34 +118,82 @@ int	get_test_data_size(test_data_t **test_info)
 void	handle_test_information(test_data_t	**test_info, int size = 0)
 {
 	static float	percent = 100.0 / (float)size;
+	static vector<most_popular_t> most_populars {P_COUNT};
+	most_popular_t result;
 	
-	cout << "-----------==============++++++++++ RECEIVED TEST INFO ++++++++++==============-----------" << endl;
+	// cout << "-----------==============++++++++++ RECEIVED TEST INFO ++++++++++==============-----------" << endl;
 	for (int i = 0; i < P_COUNT; ++i)
 	{
-		int *arr = get_int_arr(test_info, size, i);
-		most_popular_t most_popular = find_most_popular_simple(arr, size);
-		cout << "Most popular value for param " << test_info[0][i].param_num
-				 << ": " << most_popular.value << ", count: " << most_popular.count << ", " << most_popular.count * percent << " [%]" << endl;
-		delete[] arr;
+		result = find_most_popular_simple(test_info, size, i);
+		if (result.value != most_populars[i].value)
+		{
+			most_populars[i].value = result.value;
+			most_populars[i].count = result.count;
+			cout << "Most popular value for param " << test_info[0][i].param_num
+					<< ": " << result.value << ", count: " << result.count << ", " << result.count * percent << " [%]" << endl;
+		}
 	}
-	cout << "-----------==============++++++++++ RECEIVED TEST INFO ++++++++++==============-----------" << endl;
+	// cout << "-----------==============++++++++++ RECEIVED TEST INFO ++++++++++==============-----------" << endl;
 }
 
-void	receive_start_message(test_data_t	**test_info, const udp_data_t& udp_data)
+void	check_data_update(vector<vector<int>>& is_updated, test_data_t **test_info)
 {
-	int size = get_test_data_size(test_info);
-	test_data_t test_data {};
-	socklen_t addr_len = sizeof(udp_data.remote_addr);
+	vector<uint32_t> average_update (is_updated.size(), 0);
 
-	thread receiver_thread([&]()
+	for (int i = 0; i < is_updated.size(); ++i)
 	{
-		while (true)
+		for (auto& item : is_updated[i])
 		{
-			handle_test_information(test_info, size);
-			this_thread::sleep_for(chrono::seconds(1));
+			average_update[i] += item;
 		}
-	});
+		average_update[i] = average_update[i] / is_updated.size();
+	}
+	for (int i = 0; i < is_updated.size(); ++i)
+	{
+		for (int j = 0; j < is_updated[i].size(); ++j)
+		{
+			if (is_updated[i][j] < average_update[i] + MAX_NO_UPDATED)
+			{
+				test_info[i][j] = {0, 0, 0, 0, 0, 0}; // Reset the data if not updated enough
+			}
+		}
+	}
+}
 
+void	reset_no_data_update(test_data_t **test_info, int size)
+{
+	vector<uint32_t> average_update_per_param(P_COUNT, 0);
+
+	// Calculate average iterator value for each parameter across all processes
+	for (int j = 0; j < P_COUNT; ++j)  // For each parameter
+	{
+		for (int i = 0; i < size; ++i)  // Sum across all processes
+		{
+			average_update_per_param[j] += test_info[i][j].i;
+		}
+		average_update_per_param[j] = average_update_per_param[j] / size;  // Average for this parameter
+	}
+	
+	// Reset data that is too far behind the average for its parameter
+	for (int i = 0; i < size; ++i)
+	{
+		for (int j = 0; j < P_COUNT; ++j)
+		{
+			if (test_info[i][j].i < (average_update_per_param[j] - MAX_NO_UPDATED))
+			{
+				test_info[i][j] = {0, 0, 0, 0, 0, 0}; // Reset the data if not updated enough
+			}
+		}
+	}
+}
+
+void receive_data(test_data_t	**test_info, const udp_data_t& udp_data, int size)
+{
+	int	i = 0;
+	test_data_t test_data {};
+	vector<vector<int>> is_updated(size, vector<int>(P_COUNT, 0));
+	socklen_t addr_len = sizeof(udp_data.remote_addr);
+	
 	while (true)
 	{
 		if (recvfrom(udp_data.sock_fd, &test_data, sizeof(test_data), 0,
@@ -187,8 +202,31 @@ void	receive_start_message(test_data_t	**test_info, const udp_data_t& udp_data)
 		mtx_common_data.lock();
 		test_info[test_data.pid][test_data.param_idx] = test_data;
 		mtx_common_data.unlock();
+		++(is_updated[test_data.pid][test_data.param_idx]);
+		if (i != 0 && !(i % 100))
+			reset_no_data_update(test_info, size);
+		++i;
 	}
-	receiver_thread.join();
+}
+
+void	receive_start_message(test_data_t	**test_info, const udp_data_t& udp_data)
+{
+	int size = get_test_data_size(test_info);
+
+	thread handler_thread([&]()
+	{
+		while (true)
+		{
+			handle_test_information(test_info, size);
+			this_thread::sleep_for(chrono::seconds(1));
+		}
+	});
+	thread data_receiver_thread([&]()
+	{
+		receive_data(test_info, udp_data, size);
+	});
+	handler_thread.join();
+	data_receiver_thread.join();
 }
 
 test_data_t	**create_test_info_array(uint16_t count)
