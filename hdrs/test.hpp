@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:28:21 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/25 12:53:12 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/27 20:25:15 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,12 @@ struct test_data_t
 	uint16_t	iterator;
 	uint16_t	i;
 	int32_t		param_val;
+};
+
+struct heartbeat_t
+{
+	uint16_t	pid;  // Process ID (0 to max-1)
+	uint32_t	i;    // Heartbeat counter
 };
 
 uint16_t	get_pid();

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shared_data.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 08:54:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/21 14:26:02 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/28 01:24:59 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include "shared_param.hpp"
 #include "queue.hpp"
 #include "test.hpp"
+#include "time_stampt.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -96,6 +97,10 @@ class SharedData
 		bool			handle_sse_message(const sse_message_t& message);
 		idx_t			get_idx(uint16_t p_num) const;
 		uint16_t	check_ssrv_end_counters();
+		inline int8_t		get_ticks_diff(uint8_t ticks_stamp)
+		{
+			return static_cast<int16_t>(tick - ticks_stamp);
+		}
 };
 
 template <uint16_t count>
@@ -166,30 +171,21 @@ bool	SharedData<count>::handle_messages(can_data_t &can_data)
 	if (can_data.message_type == SSV_MESSAGE)
 	{
 		memcpy(&ssv_message, can_data.data, can_data.data_len);
-		// mtx_out.lock();
-		// cout << "------========++++ SSV RECEIVE ++++========------" << endl;
-		// cout << "PID: " << get_pid() << endl
-		// 			<< "PID CAN: " << can_data.idx_can << endl
-		// 			<< "PARAM NUMBER: " << ssv_message.param_num << endl
-		// 			<< "PARAM VALUE: " << ssv_message.param_val << endl
-		// 			<< "ITERATOR: " << ssv_message.iterator << endl
-		// 			<< endl;
-		// cout << "------========++++ SSV RECEIVE ++++========------" << endl;
-		// mtx_out.unlock();
 		handle_ssv_message(ssv_message, can_data.idx, can_data.idx_can);
 	}
 	if (can_data.message_type == SSRV_MESSAGE)
 	{
 		memcpy(&ssrv_message, can_data.data, can_data.data_len);
+		handle_ssrv_message(ssrv_message);
 		mtx_out.lock();
 		cout << "------========++++ SSRV RECEIVE ++++========------" << endl;
 		cout << "PID: " << get_pid() << endl
 					<< " PARAM NUMBER: " << ssrv_message.param_num << endl
 					<< " PARAM VALUE: " << ssrv_message.param_val << endl
 					<< endl;
+		print_time_stamp();
 		cout << "------========++++ SSRV RECEIVE ++++========------" << endl;
 		mtx_out.unlock();
-		handle_ssrv_message(ssrv_message);
 	}
 	if (can_data.message_type == SSE_MESSAGE)
 	{
@@ -215,13 +211,6 @@ bool	SharedData<count>::get_ssv_message(ssv_message_t &message)
 		idx_ssv = (idx_ssv + 1) % count;
 	}
 	result = shared_params[idx].get_ssv_m(message);
-	// mtx_out.lock();
-	// cout << "PID: " << get_pid() 
-	// 			<< "PARAM NUMBER: " << message.param_num
-	// 			<< " PARAM VALUE: " << message.param_val
-	// 			<< " ITERATOR: " << message.iterator
-	// 			<< endl;
-	// mtx_out.unlock();
 	return result;
 }
 
@@ -303,6 +292,7 @@ bool	SharedData<count>::set_ssrv_message(can_data_t &can_data)
 					<< " PARAM NUMBER: " << message.param_num << endl
 					<< " PARAM VALUE: " << message.param_val << endl
 					<< endl;
+		print_time_stamp();
 		cout << "------========++++ SSRV SEND ++++========------" << endl;
 		mtx_out.unlock();
 	}
@@ -430,8 +420,7 @@ uint16_t	SharedData<count>::check_ssrv_end_counters()
 	{
 		if (shared_params[idx].get_ssrv_end_counter(ssrv_counter))
 		{
-			if (P_Iterator::get_diff(static_cast<int8_t>(tick), static_cast<int8_t>(ssrv_counter))
-					>= SSRV_WAIT_TICKS)
+			if (get_ticks_diff(ssrv_counter) >= SSRV_WAIT_TICKS)
 			{
 				break ;
 			}

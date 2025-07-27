@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   run_test.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/14 13:55:51 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/22 07:29:27 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/28 00:10:35 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "hdrs/test.hpp"
+#include "../hdrs/test.hpp"
 
 #include <iostream>
 #include <cstdint>
@@ -56,7 +56,7 @@ void	create_command(input_data_t& data)
 	for (int i = 0; i < data.count; ++i)
 	{
 		part1 = "gnome-terminal -- bash -c './test";
-		part1 += " " + to_string(data.id + i) + " " + to_string(data.start_iter_val + data.count / 10 + i);
+		part1 += " " + to_string(data.id + i) + " " + to_string(data.start_iter_val);
 		if (data.kef > 1)
 		{
 			data.kef += i;
@@ -67,36 +67,6 @@ void	create_command(input_data_t& data)
 		system(part1.c_str());
 	}
 }
-
-// void	crt_test_proccess(input_data_t data)
-// {
-// 	int	*pid = new int[data.count];
-
-// 	for (int i = 0; i < data.count; ++i)
-// 	{
-// 		cout << "Creating process " << i + 1 << " of " << data.count << endl;
-// 		pid[i] = fork();
-// 		if (pid[i] < 0)
-// 		{
-// 			perror("Fork failed");
-// 			exit(EXIT_FAILURE);
-// 		}
-// 		if (pid[i] == 0) // Child process
-// 		{
-// 			if (data.kef > 1)
-// 			{
-// 				data.kef += i;
-// 			}
-// 			start_test(data.id + i, data.start_iter_val + data.count / 10 + i, data.kef);
-// 			exit(EXIT_SUCCESS);
-// 		}
-// 	}
-// 	for (int i = 0; i < data.count; ++i)
-// 	{
-// 		int status;
-// 		waitpid(pid[i], &status, 0);
-// 	}
-// }
 
 int main()
 {
