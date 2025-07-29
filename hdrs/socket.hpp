@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 23:39:08 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/28 00:13:54 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/29 22:23:03 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,8 @@ udp_data_t	create_sender_socket(const char* multicast_ip = MULTICAST_IP, uint16_
 udp_data_t	create_receive_socket(const char* multicast_ip = MULTICAST_IP, uint16_t multicast_port = MULTICAST_PORT);
 template <typename send_t>
 void	send_udp(const udp_data_t& udp_data, send_t& data);
+template <typename send_t>
+void	send_udp(const udp_data_t& udp_data, send_t *data, size_t data_size);
 template <typename receive_t>
 void 	receive_udp(const udp_data_t& udp_data, receive_t& data);
 
@@ -38,6 +40,13 @@ template <typename send_t>
 void	send_udp(const udp_data_t& udp_data, send_t& data)
 {
 	if (sendto(udp_data.sock_fd, &data, sizeof(data), 0, (struct sockaddr*)&(udp_data.remote_addr), sizeof(udp_data.remote_addr)) < 0)
+		die("sendto failed");
+}
+
+template <typename send_t>
+void	send_udp(const udp_data_t& udp_data, send_t *data, size_t data_size)
+{
+	if (sendto(udp_data.sock_fd, data, data_size, 0, (struct sockaddr*)&(udp_data.remote_addr), sizeof(udp_data.remote_addr)) < 0)
 		die("sendto failed");
 }
 

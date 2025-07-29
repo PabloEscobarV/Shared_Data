@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/27 23:37:35 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/28 00:04:37 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/29 23:56:12 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,9 @@ udp_data_t	create_receive_socket(const char* multicast_ip, uint16_t multicast_po
 	mreq.imr_interface.s_addr = htonl(INADDR_ANY);
 	if (setsockopt(socket_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq)) < 0)
 		die("setsockopt(IP_ADD_MEMBERSHIP) failed");
+	int buffer_size = 1024 * 1024 * 5; // 5MB buffer
+	if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof(buffer_size)) < 0)
+		die("setsockopt(SO_RCVBUF) failed");
 	udp_data.sock_fd = socket_fd;
 	udp_data.remote_addr = remote_addr;
 	return udp_data;

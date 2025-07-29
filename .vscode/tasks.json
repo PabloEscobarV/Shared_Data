@@ -9,8 +9,8 @@
         "-g",
         "${file}",
         "socket.cpp",
-        "time_stampt.cpp",
-        "../src/*.cpp",
+        // "time_stampt.cpp",
+        // "../src/*.cpp",
         "-o",
         "${fileDirname}/${fileBasenameNoExtension}"
       ],

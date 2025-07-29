@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/28 00:45:12 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/07/30 00:00:16 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,9 @@ uint16_t	get_pid()
 	return PID;
 }
 
-void	check_param_data(ParamData<P_COUNT> *param_data, ParamData<P_COUNT> *old_param_data)
+bool	check_param_data(ParamData<P_COUNT> *param_data, ParamData<P_COUNT> *old_param_data)
 {
+	bool changed = false;
 	for (uint16_t i = 0; i < P_COUNT; ++i)
 	{
 		if (param_data->get_param_value(i) != old_param_data->get_param_value(i))
@@ -58,8 +59,10 @@ void	check_param_data(ParamData<P_COUNT> *param_data, ParamData<P_COUNT> *old_pa
 			print_time_stamp();
 			mtx_out.unlock();
 			old_param_data->set_param_value(i, param_data->get_param_num(i), param_data->get_param_value(i));
+			changed = true;
 		}
 	}
+	return changed;
 }
 
 void	send_ssv(udp_data_t& udp_data, SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_data)
@@ -79,25 +82,48 @@ void	send_ssv(udp_data_t& udp_data, SharedData<P_COUNT> *shared_data, ParamData<
 	}
 }
 
-void	send_test_data(udp_data_t& udp_data, SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_data)
+int32_t	*crt_para_arr()
+{
+	int32_t	*param_arr = new int32_t[P_COUNT];
+	for (uint16_t i = 0; i < P_COUNT; ++i)
+	{
+		param_arr[i] = param_data->get_param_value(i);
+	}
+	return param_arr;
+}
+
+void	send_test_data(udp_data_t& udp_data,
+										SharedData<P_COUNT> *shared_data,
+										ParamData<P_COUNT> *param_data)
 {
 	test_data_t test_data {};
 	test_data.pid = get_pid();
-	test_data.iterator = 0;
-	test_data.i = 0;
+	static ParamData<P_COUNT> *old_param_data = new ParamData<P_COUNT>();
 	
 	while (true)
 	{
 		for (int i = 0; i < P_COUNT; ++i)
 		{
-			test_data.param_num = param_data->get_param_num(i);
-			test_data.param_val = param_data->get_param_value(i);
-			test_data.iterator = shared_data->get_iterator(i);
-			test_data.param_idx = i;
-			send_udp(udp_data, test_data);
+			if (param_data->get_param_value(i) != old_param_data->get_param_value(i))
+			{
+				test_data.param_num = param_data->get_param_num(i);
+				test_data.param_idx = i;
+				test_data.iterator = shared_data->get_iterator(i);
+				test_data.param_val = param_data->get_param_value(i);
+				old_param_data->set_param_value(i, test_data.param_num, test_data.param_val);
+				send_udp(udp_data, test_data);
+
+				mtx_out.lock();
+				cout << "Sender PID: " << test_data.pid
+						 << ", Param Index: " << test_data.param_idx
+						 << ", Param Number: " << test_data.param_num
+						 << ", Param Value: " << test_data.param_val
+						 << ", Iterator: " << test_data.iterator << endl;
+				print_time_stamp();
+				mtx_out.unlock();
+			}
 		}
-		++test_data.i;
-		this_thread::sleep_for(chrono::milliseconds(TICK_PERIOD * 2));
+		this_thread::sleep_for(chrono::milliseconds(TICK_PERIOD));
 	}
 }
 
@@ -143,6 +169,8 @@ void	receive_ssrv_request(udp_data_t& udp_data,
 
 void	crt_trhreads(SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_data, ParamData<P_COUNT> *old_param_data)
 {
+	int32_t *param_arr = crt_para_arr();
+
 	thread	check_data_change([&]()
 	{
 		while (true)
@@ -193,6 +221,7 @@ void	crt_trhreads(SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_da
 	sender_thread.join();
 	send_test_data_thread.join();
 	check_data_change.join();
+	delete[] param_arr;
 }
 
 void	init_param_data(ParamData<P_COUNT> *param_data, ParamData<P_COUNT> *old_param_data, uint16_t step_kef)
