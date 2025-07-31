@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/21 10:29:28 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/07/31 15:26:18 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,188 +18,252 @@
 #include <iostream>
 #include <mutex>
 #include <unistd.h>
+#include <cstring>
 
 using std::cout;
 using std::endl;
 
-SharedParam::SharedParam(uint16_t p_num) : param_num(p_num)
+namespace hide
 {
-	
+/*******************************************************************************************************************
+ *  @brief Static P_Iterator instance for internal use.
+ *
+ *  Due Renesas compiler error.
+ *******************************************************************************************************************/
+  static P_Iterator iter_hide;
+} // hide
+
+/* see header file */
+SharedParam::SharedParam(const uint16_t param_idx) : iterator(&hide::iter_hide),
+                                                    p_idx(param_idx)
+{
+
 }
 
-void	SharedParam::init(uint16_t p_num)
+/* see header file */
+void SharedParam::init(const uint16_t param_idx)
 {
-	param_num = p_num;
+  p_idx = param_idx;
 }
 
-bool	SharedParam::get_ssv_m(ssv_message_t& message)
+/* see header file */
+uint16_t SharedParam::get_iterator() const
 {
-	message.iterator = iterator;
-	message.param_num = param_num;
-	message.param_val = get_param_value();
-	++iterator;
-	return true;
+  uint16_t iter = iterator->get_iterator();
+
+  ++(*iterator);
+  return iter;
 }
 
-bool	SharedParam::get_ssrv_m(ssrv_message_t& message)
+/* see header file */
+bool SharedParam::get_new_value(uint8_t *data, uint16_t size) const
 {
-	message.param_num = param_num;
-	message.param_val = new_param_value;
-	return true;
+  bool result = false;
+
+  if (size <= SHARED_PARM_MAX_DATA_LEN)
+  {
+     memcpy(data, new_param_value, size);
+     result = true;
+  }
+  return result;
 }
 
-bool	SharedParam::get_sse_m(sse_message_t& message)
+/* see header file */
+uint8_t SharedParam::get_error_code() const
 {
-	message.error_code = err_code;
-	message.param_num = param_num;
-	return true;
+  return err_code;
 }
 
-bool	SharedParam::handle_ssv_m(const ssv_message_t& message, uint16_t idx, uint16_t idx_can)
+/* see header file */
+bool SharedParam::handle_p_synchro(const uint8_t *param_val,
+                                  const uint16_t iter_synchro,
+                                  const uint16_t idx,
+                                  const uint16_t idx_can)
 {
-	bool	result = get_param_max_value() >= get_param_value();
+  const bool result = is_param_value_ok(param_val);
 
-	if (result)
-	{
-		if (is_req_update_param_value(message, idx, idx_can))
-		{
-			mtx_out.lock();
-			cout << "------========++++ SSV RECEIVE ++++========------" << endl;
-			cout << "PID: " << get_pid() << endl
-						<< "PARAM NUMBER: " << message.param_num << endl
-						<< "PARAM VALUE: " << message.param_val << endl
-						<< "ITERATOR: " << message.iterator << endl
-						<< endl;
-			cout << "------========++++ SSV RECEIVE ++++========------" << endl;
-			mtx_out.unlock();
-			set_param_value(message.param_val);
-		}
-	}
-	else
-	{
-		set_bit(&err_code, OUT_OF_RANGE_SSV, true);
-	}
-	return result;
+  if (result)
+  {
+    if (is_req_update_param_value(iter_synchro, idx, idx_can))
+    {
+      write_param_value(param_val);
+    }
+  }
+  else
+  {
+    comap::Bit::set(err_code, OUT_OF_RANGE_SSV);
+  }
+  return result;
 }
 
-bool	SharedParam::handle_ssrv_m(const ssrv_message_t& message)
+/* see header file */
+bool SharedParam::handle_p_val_change_req(const uint8_t *new_p_val)
 {
-	bool	result = get_param_max_value() >= message.param_val;
+  const bool result = is_param_value_ok(new_p_val);
 
-	if (!result)
-	{
-		set_bit(&err_code, OUT_OF_RANGE_SSRV, true);
-	}
-	return result;
+  if (!result)
+  {
+    comap::Bit::set(err_code, OUT_OF_RANGE_SSRV);
+  }
+  return result;
 }
 
-bool	SharedParam::handle_sse_m(const sse_message_t& message)
+/* see header file */
+bool SharedParam::handle_error_code(const uint8_t error_code)
 {
-	if (get_bit(message.error_code, OUT_OF_RANGE_SSV))
-	{
+  if (comap::Bit::test(error_code, OUT_OF_RANGE_SSV))
+  {
 
-	}
-	if (get_bit(err_code, SET_SSRV_COUNTER) && get_bit(message.error_code, OUT_OF_RANGE_SSRV))
-	{
-		set_bit(&err_code, NEW_VAL_REQ_NOT_ALLOWED, true);
-		mtx_out.lock();
-		cout << "------========++++ SSE RECEIVE ++++========------" << endl;
-		cout << "PID: " << get_pid() << endl
-					<< " PARAM NUMBER: " << param_num << endl
-					<< " ERROR CODE: " << static_cast<int>(message.error_code) << endl
-					<< endl;
-		cout << "------========++++ SSE RECEIVE ++++========------" << endl;
-		mtx_out.unlock();
-	}
-	return true;
+  }
+  if (comap::Bit::test(err_code, SET_SSRV_COUNTER) && comap::Bit::test(error_code, OUT_OF_RANGE_SSRV))
+  {
+    comap::Bit::set(err_code, NEW_VAL_REQ_NOT_ALLOWED);
+  }
+  return true;
 }
 
-bool	SharedParam::accept_new_value()
+/* see header file */
+bool SharedParam::accept_new_value()
 {
-	bool	result = !get_bit(err_code, NEW_VAL_REQ_NOT_ALLOWED);
-	
-	if (result)
-	{
-		set_param_value(new_param_value);
-		update_iterator();
-	}
-	reset_ssrv_end_counter();
-	return result;
+  const bool result = !comap::Bit::test(err_code, NEW_VAL_REQ_NOT_ALLOWED);
+
+  if (result)
+  {
+    write_param_value(new_param_value);
+    update_iterator();
+  }
+  reset_ssrv_end_counter();
+  return result;
 }
 
-bool	SharedParam::add_new_param_value(int32_t new_param_val, uint8_t ssrv_atmp_counter)
+/* see header file */
+bool SharedParam::add_new_param_value(uint8_t ssrv_atmp_counter, uint8_t *new_param_val, uint16_t size)
 {
-	bool	result = !get_bit(err_code, SET_SSRV_COUNTER);
-	
-	if (result)
-	{
-		new_param_value = new_param_val;
-		set_ssrv_end_counter(ssrv_atmp_counter);
-	}
-	return result;
+  const bool result = !comap::Bit::test(err_code, SET_SSRV_COUNTER);
+
+  if (result)
+  {
+    memcpy(new_param_value, new_param_val, size);
+    set_ssrv_end_counter(ssrv_atmp_counter);
+  }
+  return result;
 }
 
-bool	SharedParam::is_req_update_param_value(const ssv_message_t& message, uint16_t idx, uint16_t idx_can)
+/* see header file */
+bool SharedParam::is_req_update_param_value(const uint16_t iter_synchro,
+                                            const uint16_t idx,
+                                            const uint16_t idx_can)
 {
-	bool	is_req = message.param_val != get_param_value();
-	
-	if (!iterator.update_iterator(message.iterator))
-	{
-		if (P_Iterator::check_iterators(iterator, message.iterator))
-		{
-			is_req = false;
-		}
-		if (is_req && (idx_can > idx))
-		{
-			is_req = false;
-		}
-	}
-	return is_req;
+  bool is_req = true;
+
+  if (!iterator->update_iterator(iter_synchro))
+  {
+    if (P_Iterator::check_left_iter_is_newer(iterator->get_iterator(), iter_synchro))
+    {
+      is_req = false;
+    }
+    if (is_req && (idx_can > idx))
+    {
+      is_req = false;
+    }
+  }
+  return is_req;
 }
 
-void	SharedParam::set_ssrv_end_counter(uint8_t counter)
+/* see header file */
+void SharedParam::set_ssrv_end_counter(uint8_t counter)
 {
-	ssrv_counter = counter;
-	set_bit(&err_code, SET_SSRV_COUNTER, true);
+  ssrv_counter = counter;
+  comap::Bit::set(err_code, SET_SSRV_COUNTER);
 }
 
-void	SharedParam::reset_ssrv_end_counter()
+/* see header file */
+void SharedParam::reset_ssrv_end_counter()
 {
-	set_bit(&err_code, SET_SSRV_COUNTER, false);
+  comap::Bit::clear(err_code, SET_SSRV_COUNTER);
 }
 
-bool	SharedParam::get_ssrv_end_counter(uint8_t& counter) const
+/* see header file */
+bool SharedParam::get_ssrv_end_counter(uint8_t& counter) const
 {
-	counter = ssrv_counter;
-	return get_bit(err_code, SET_SSRV_COUNTER);
+  counter = ssrv_counter;
+  return comap::Bit::test(err_code, SET_SSRV_COUNTER);
 }
 
+/* see header file */
 bool SharedParam::is_new_value_allowed() const
 {
-	return !get_bit(err_code, NEW_VAL_REQ_NOT_ALLOWED);
+  return !comap::Bit::test(err_code, NEW_VAL_REQ_NOT_ALLOWED);
 }
 
+/* see header file */
 void SharedParam::update_iterator()
 {
-	iterator += SSRV_INCR_VALUE;
+  *iterator += SSRV_INCR_VALUE;
 }
 
-int32_t	SharedParam::get_param_value()
+/* see header file */
+bool SharedParam::get_param_value(uint8_t *dest) const
 {
-	return param_data->get_param_value(param_data->get_param_idx(param_num));
+  bool  result = false;
+  co_descr_t descr;
+
+  if ((app_comm_obj_get_descr(get_param_num(), &descr) == CO_DEF) && (descr.type == CO_SPAR))
+  {
+     if (csl_app_comm_obj_read(&descr, dest, SHARED_PARM_MAX_DATA_LEN))
+     {
+        result = true;
+     }
+  }
+  return result;
 }
 
-int32_t	SharedParam::get_param_max_value()
+/* see header file */
+bool SharedParam::is_param_value_ok(const uint8_t *p_value, uint16_t size) const
 {
-	return param_data->get_param_max_value();
+  int64_t value = CheckParamRange::get_value_from_arr(p_idx, p_value, size);
+
+  return (CheckParamRange::is_setpoint_val_out_of_range(p_idx, value));
 }
 
-void	SharedParam::set_param_value(int32_t p_value)
+/* see header file */
+void SharedParam::write_param_value(const uint8_t *p_value, uint16_t size)
 {
-	param_data->set_param_value(param_data->get_param_idx(param_num), param_num, p_value);
+  co_descr_t descr;
+  uint32_t received_value = 0;
+  uint32_t actual_value = 0;
+  uint16_t comm_obj = get_param_num();
+
+  if ((app_comm_obj_get_descr(comm_obj, &descr) == CO_DEF) && (descr.type == CO_SPAR))
+  {
+    memcpy(&received_value, p_value, size);
+    if (setpoint_read(descr.addr, descr.len, &actual_value))
+    {
+      if (actual_value != received_value)
+      {
+        set_param_value(descr, comm_obj, received_value);
+      }
+    }
+  }
 }
 
-uint16_t	SharedParam::get_param_num() const
+/* see header file */
+void SharedParam::set_param_value(const co_descr_t& descr, const uint16_t& comm_obj, uint32_t& received_value)
 {
-	return param_num;
+  if (acodr_ok == sys_param_write_term(descr.addr, descr.len, &received_value))
+  {
+    notify_param_change(p_idx, Term_ts_flags::INVALID_TERM_ID, false);
+    // notify app
+    cb_notify_param_write(descr.addr, descr.len, UAM_NO_USER_SLOT, ID_SYNC_TERMINAL,
+                          comm_obj, false, &received_value, true);
+  }
+}
+
+/* see header file */
+uint16_t SharedParam::get_param_num() const
+{
+  cfg_il3f_search_par_t search_par;
+
+  cfg_get_search_par_item(p_idx, &search_par);
+  return search_par.comm_obj;
 }
