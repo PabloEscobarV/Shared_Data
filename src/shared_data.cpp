@@ -1,3 +1,17 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   shared_data.cpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/01 14:38:45 by blackrider        #+#    #+#             */
+/*   Updated: 2025/08/01 14:39:00 by blackrider       ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "hdrs/shared_data.hpp"
+
 /* see header file */
 SharedData::SharedData(Can_app_ic_notify_new_data_ifc * ptr_can_app_ic, Controller_addresses::Values addr_name)
   : Can_data_handler_ifc(ptr_can_app_ic, addr_name),
@@ -5,49 +19,41 @@ SharedData::SharedData(Can_app_ic_notify_new_data_ifc * ptr_can_app_ic, Controll
   address_name(addr_name),
   tick(0)
 {
-
+  for (int i = 0; i < NUM_SYNC_PARAM; i++)
+  {
+    shared_params[i].init(sync_param_list[i]);
+  }
 }
 
 /* see header file */
 bool SharedData::set_data_can_thread(uint8_t data_idx,
-                                             uint8_t *ptr_src_data,
-                                             uint8_t src_data_len,
-                                             uint8_t can_addr)
+                                    uint8_t *ptr_src_data,
+                                    uint8_t src_data_len,
+                                    uint8_t can_addr)
 {
   bool result = false;
   can_data_t can_data;
 
-  if (src_data_len <= 8)
+  if ((data_idx >= SSV_MESSAGE) && (data_idx <= SSE_MESSAGE))
   {
-    can_data.message_type = data_idx;
-    can_data.data_len = src_data_len;
-    can_data.idx = Addr_mngr::get_instance().get_addr(static_cast<Controller_addresses::Values>(address_name));
-    can_data.idx_can = can_addr;
-    memcpy(can_data.data, ptr_src_data, src_data_len);
-    result = handle_messages(can_data);
+    if ((src_data_len <= 8))
+    {
+      can_data.message_type = data_idx;
+      can_data.data_len = src_data_len;
+      can_data.idx = Addr_mngr::get_instance().get_addr(static_cast<Controller_addresses::Values>(address_name));
+      can_data.idx_can = can_addr;
+      memcpy(can_data.data, ptr_src_data, src_data_len);
+      result = handle_messages(can_data);
+    }
   }
   return result;
 }
 
 /* see header file */
-int8_t SharedData::get_data_app_thread(uint8_t data_idx,
-                                               uint8_t *ptr_dst_data,
-                                               size_t dst_data_len,
-                                               uint8_t can_addr)
-{
-  (void)data_idx;       // Suppress unused parameter warning
-  (void)dst_data_len;   // Suppress unused parameter warning
-  (void)can_addr;       // Suppress unused parameter warning
-  (void)ptr_dst_data;   // Suppress unused parameter warning
-
-  return Can_data_handler_ifc::NO_DATA; // No data for APP thread in this implementation
-}
-
-/* see header file */
 int8_t SharedData::get_data_can_thread(uint8_t data_idx,
-                                               uint8_t *ptr_dst_data,
-                                               size_t dst_data_len,
-                                               Controller_addresses::Values addr_name)
+                                      uint8_t *ptr_dst_data,
+                                      size_t dst_data_len,
+                                      Controller_addresses::Values addr_name)
 {
   can_data_t can_data;
 
@@ -66,19 +72,27 @@ int8_t SharedData::get_data_can_thread(uint8_t data_idx,
 }
 
 /* see header file */
+void SharedData::service(uint64_t active_controllers)
+{
+  (void)active_controllers; // Suppress unused parameter warning
+  // Process periodic tasks for shared data management.
+  period_counter();
+}
+
+/* see header file */
 int8_t SharedData::get_data_len(uint8_t data_idx) const
 {
   int8_t result = NO_DATA;
 
   switch (data_idx)
   {
-    case 0: // temporery idx for SSV message
+    case SSV_MESSAGE:
       result = static_cast<int8_t>(sizeof(ssv_message_t));
       break;
-    case 1: // temporery idx for SSRV message
+    case SSRV_MESSAGE:
       result = static_cast<int8_t>(sizeof(ssrv_message_t));
       break;
-    case 2: // temporery idx for SSE message
+    case SSE_MESSAGE:
       result = static_cast<int8_t>(sizeof(sse_message_t));
       break;
     default:
@@ -90,10 +104,7 @@ int8_t SharedData::get_data_len(uint8_t data_idx) const
 /* see header file */
 void SharedData::initialize()
 {
-  for (int i = 0; i < NUM_SYNC_PARAM; i++)
-  {
-    shared_params[i].init(sync_param_list[i]);
-  }
+
 }
 
 /* see header file */
@@ -133,7 +144,8 @@ bool  SharedData::add_ssrv_message(const uint16_t param_num, const uint8_t *new_
   if (new_message.idx < COUNT)
   {
     shared_params[new_message.idx].add_new_param_value(SSRV_ATTEMPTS, new_param_val, size);
-    result = ssrv_queue.push(new_message);
+    ssrv_queue.push(new_message);
+    result = true;
   }
   return result;
 }
@@ -408,6 +420,8 @@ uint16_t  SharedData::check_ssrv_end_counters()
   }
   return idx;
 }
+
+/* see header file */
 
 /* see header file */
 bool  SharedData::check_counter_ssv() const

@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 08:54:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/08/01 08:15:38 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/08/01 14:40:03 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,22 @@ uint16_t get_can_addr()
 class SharedData : public Can_data_handler_ifc
 {
   public:
+
+    /*******************************************************************************************************************
+     *  @struct can_data_t
+     *  @brief CAN data structure for message transmission.
+     *
+     *  Structure that holds message data for CAN communication including
+     *  message type, data payload, and indexing information.
+     *******************************************************************************************************************/
+    struct can_data_t
+    {
+      uint8_t  message_type;                 ///< Message type identifier
+      uint8_t  data[8];  ///< Message data payload
+      uint16_t data_len;                     ///< Length of data payload
+      uint16_t idx;                          ///< Current iterator index
+      uint16_t idx_can;                      ///< CAN-specific iterator index
+    };
 
     /*******************************************************************************************************************
      *  @enum message_type_t
@@ -107,22 +123,15 @@ class SharedData : public Can_data_handler_ifc
                                        size_t dst_data_len,
                                        Controller_addresses::Values addr_name) OVERRIDE;
 
-    /*******************************************************************************************************************
-     *  @brief Get data for APP thread.
+    /***************************************************************************************************************//**
+     * @brief Do processing of periodic tasks. It should be called periodically (40 ms).
      *
-     *  @param[in] data_idx Index of data type.
-     *  @param[out] ptr_dst_data Pointer to destination buffer.
-     *  @param[in] dst_data_len Length of destination buffer.
-     *  @param[in] can_addr CAN address.
+     * @param active_controllers ... bit mask of active controllers
      *
-     *  @return Length of data copied or NO_DATA if no data available.
-     *
-     *  Provides data for APP thread based on message type.
-     *******************************************************************************************************************/
-    virtual int8_t get_data_app_thread(uint8_t data_idx,
-                                       uint8_t *ptr_dst_data,
-                                       size_t dst_data_len,
-                                       uint8_t can_addr) OVERRIDE;
+     * @thread_safety_NO
+     * @call_from_ISR_NO
+     ******************************************************************************************************************/
+    void service(uint64_t active_controllers);
 
     /*******************************************************************************************************************
      *  @brief Get data length for specified index.
@@ -143,13 +152,6 @@ class SharedData : public Can_data_handler_ifc
     virtual void initialize();
 
     /*******************************************************************************************************************
-     *  @brief Initialize the shared data system.
-     *
-     *  Performs initialization required by the Can_data_handler_ifc interface.
-     *******************************************************************************************************************/
-    void init(const uint16_t params = 0, const uint16_t idx = 0);
-
-    /*******************************************************************************************************************
      *  @brief Periodic processing counter.
      *
      *  Performs periodic tasks for parameter synchronization and message processing.
@@ -168,6 +170,96 @@ class SharedData : public Can_data_handler_ifc
      *  Adds a new parameter value change request to the processing queue.
      *******************************************************************************************************************/
     bool add_ssrv_message(const uint16_t param_num, const uint8_t *new_param_val, uint16_t size = SHARED_PARM_MAX_DATA_LEN);
+
+  private:
+    /*******************************************************************************************************************
+     *  @struct ssrv_service_t
+     *  @brief Service structure for SSRV message processing.
+     *******************************************************************************************************************/
+    struct ssrv_service_t
+    {
+      uint8_t idx;  ///< Parameter index
+    };
+
+    /*******************************************************************************************************************
+     *  @struct sse_service_t
+     *  @brief Service structure for SSE message processing.
+     *******************************************************************************************************************/
+    struct sse_service_t
+    {
+      uint8_t counter;  ///< Error counter
+      uint8_t idx;      ///< Parameter index
+    };
+
+    /*******************************************************************************************************************
+     *  @struct ssv_message_t
+     *  @brief Set Shared Value message structure.
+     *
+     *  Message structure for transmitting parameter value updates with sequence control.
+     *  Used to synchronize parameter values across distributed nodes with conflict resolution.
+     *******************************************************************************************************************/
+
+    #include "pack_struct_begin.h"
+    struct ssv_message_t
+    {
+      uint8_t   param_val[SHARED_PARM_MAX_DATA_LEN];  ///< Parameter value to set
+      uint16_t  iterator;   ///< Sequence iterator for message ordering
+      uint16_t  param_num;  ///< Parameter number identifier
+    };
+    #include "pack_struct_end.h"
+
+    /*******************************************************************************************************************
+     *  @struct ssrv_message_t
+     *  @brief Set Shared Request Value message structure.
+     *
+     *  Packed message structure for requesting parameter value changes.
+     *  Used for parameter modification requests that require validation.
+     *******************************************************************************************************************/
+    #include "pack_struct_begin.h"
+    struct ssrv_message_t
+    {
+      uint16_t  param_num;  ///< Parameter number identifier
+      uint8_t   param_val[SHARED_PARM_MAX_DATA_LEN];  ///< Requested parameter value
+    };
+    #include "pack_struct_end.h"
+
+    /*******************************************************************************************************************
+     *  @struct sse_message_t
+     *  @brief Set Shared Error message structure.
+     *
+     *  Packed message structure for transmitting error notifications related to parameters.
+     *  Used to communicate parameter validation failures or access restrictions.
+     *******************************************************************************************************************/
+    #include "pack_struct_begin.h"
+    struct sse_message_t
+    {
+      uint16_t param_num;  ///< Parameter number that caused the error
+      uint8_t  error_code; ///< Error code identifier
+    };
+    #include "pack_struct_end.h"
+
+    static const uint16_t SSV_ALL_PERIOD = 500;       ///< SSV all message period
+    static const uint8_t COUNT = NUM_SYNC_PARAM;      ///< Number of shared parameters
+    static const uint8_t QUEUE_SIZE = COUNT / 5 + 1;  ///< Queue size calculation
+    static const uint8_t SSV_PERIOD = 5;              ///< SSV message period
+    static const uint8_t SSRV_PERIOD = 2;             ///< SSRV message period
+    static const uint8_t SSE_PERIOD = 5;              ///< SSE message period
+    static const uint8_t SSRV_ATTEMPTS = 3;           ///< SSRV attempt count
+    static const uint8_t SSRV_WAIT_TICKS = 25;        ///< SSRV wait time
+
+    FSQueue<sse_service_t, QUEUE_SIZE> sse_queue;      ///< SSE service queue
+    FSQueue<ssrv_service_t, QUEUE_SIZE> ssrv_queue;    ///< SSRV service queue
+    SharedParam shared_params[COUNT];                  ///< Array of shared parameters
+    uint16_t  idx_ssv;                                 ///< SSV index counter
+    uint8_t   address_name;                            ///< CAN address
+    uint8_t   tick;                                    ///< Periodic counter
+
+   /*******************************************************************************************************************
+     *  @brief Initialize the shared data system.
+     *
+     *  Performs initialization required by the Can_data_handler_ifc interface.
+     *******************************************************************************************************************/
+    void init(const uint16_t params = 0, const uint16_t idx = 0);
 
     /*******************************************************************************************************************
      *  @brief Get messages for CAN transmission.
@@ -190,105 +282,6 @@ class SharedData : public Can_data_handler_ifc
      *  Processes incoming CAN messages and updates parameter states accordingly.
      *******************************************************************************************************************/
     bool handle_messages(can_data_t &can_data);
-
-  private:
-    /*******************************************************************************************************************
-     *  @struct ssrv_service_t
-     *  @brief Service structure for SSRV message processing.
-     *******************************************************************************************************************/
-    struct ssrv_service_t
-    {
-      uint8_t idx;  ///< Parameter index
-    };
-
-    /*******************************************************************************************************************
-     *  @struct sse_service_t
-     *  @brief Service structure for SSE message processing.
-     *******************************************************************************************************************/
-    struct sse_service_t
-    {
-      uint8_t counter;  ///< Error counter
-      uint8_t idx;      ///< Parameter index
-    };
-
-/*******************************************************************************************************************
- *  @struct ssv_message_t
- *  @brief Set Shared Value message structure.
- *
- *  Message structure for transmitting parameter value updates with sequence control.
- *  Used to synchronize parameter values across distributed nodes with conflict resolution.
- *******************************************************************************************************************/
-
- #include "pack_struct_begin.h"
- struct ssv_message_t
-{
-  uint8_t   param_val[SHARED_PARM_MAX_DATA_LEN];  ///< Parameter value to set
-  uint16_t  iterator;   ///< Sequence iterator for message ordering
-  uint16_t  param_num;  ///< Parameter number identifier
-};
-#include "pack_struct_end.h"
-
-/*******************************************************************************************************************
- *  @struct ssrv_message_t
- *  @brief Set Shared Request Value message structure.
- *
- *  Packed message structure for requesting parameter value changes.
- *  Used for parameter modification requests that require validation.
- *******************************************************************************************************************/
-#include "pack_struct_begin.h"
- struct ssrv_message_t
-{
-  uint16_t  param_num;  ///< Parameter number identifier
-  uint8_t   param_val[SHARED_PARM_MAX_DATA_LEN];  ///< Requested parameter value
-};
-#include "pack_struct_end.h"
-
-/*******************************************************************************************************************
- *  @struct sse_message_t
- *  @brief Set Shared Error message structure.
- *
- *  Packed message structure for transmitting error notifications related to parameters.
- *  Used to communicate parameter validation failures or access restrictions.
- *******************************************************************************************************************/
-#include "pack_struct_begin.h"
- struct sse_message_t
-{
-  uint16_t param_num;  ///< Parameter number that caused the error
-  uint8_t  error_code; ///< Error code identifier
-};
-#include "pack_struct_end.h"
-
-/*******************************************************************************************************************
- *  @struct can_data_t
- *  @brief CAN data structure for message transmission.
- *
- *  Structure that holds message data for CAN communication including
- *  message type, data payload, and indexing information.
- *******************************************************************************************************************/
-struct can_data_t
-{
-  uint8_t  message_type;                 ///< Message type identifier
-  uint8_t  data[8];  ///< Message data payload
-  uint16_t data_len;                     ///< Length of data payload
-  uint16_t idx;                          ///< Current iterator index
-  uint16_t idx_can;                      ///< CAN-specific iterator index
-};
-
-    static const uint16_t SSV_ALL_PERIOD = 500;       ///< SSV all message period
-    static const uint8_t COUNT = NUM_SYNC_PARAM;      ///< Number of shared parameters
-    static const uint8_t QUEUE_SIZE = COUNT / 5 + 1;  ///< Queue size calculation
-    static const uint8_t SSV_PERIOD = 5;              ///< SSV message period
-    static const uint8_t SSRV_PERIOD = 2;             ///< SSRV message period
-    static const uint8_t SSE_PERIOD = 5;              ///< SSE message period
-    static const uint8_t SSRV_ATTEMPTS = 3;           ///< SSRV attempt count
-    static const uint8_t SSRV_WAIT_TICKS = 25;        ///< SSRV wait time
-
-    FSQueue<sse_service_t, QUEUE_SIZE> sse_queue;      ///< SSE service queue
-    FSQueue<ssrv_service_t, QUEUE_SIZE> ssrv_queue;    ///< SSRV service queue
-    SharedParam shared_params[COUNT];                  ///< Array of shared parameters
-    uint16_t  idx_ssv;                                 ///< SSV index counter
-    uint8_t   address_name;                            ///< CAN address
-    uint8_t   tick;                                    ///< Periodic counter
 
     /*******************************************************************************************************************
      *  @brief Get SSV message for transmission.
@@ -419,10 +412,6 @@ struct can_data_t
     {
       return static_cast<int8_t>(static_cast<int16_t>(tick - ticks_stamp));
     }
-
-    // static void shell_sort(SharedParam *array, const uint16_t size);
-};
-
 // extern SharedData<P_COUNT> *shared_data;
 
 #endif
