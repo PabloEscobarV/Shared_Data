@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:28:21 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/30 00:08:38 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/08/03 19:06:32 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <netinet/in.h>    // sockaddr_in structure
 #include <arpa/inet.h>     // inet_addr(), inet_ntoa(), etc.
 
-#define P_COUNT 3
+#define P_COUNT 64
 
 struct	udp_data_t
 {
