@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/14 13:55:51 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/28 00:10:35 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/08/04 00:27:52 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <limits>
 #include <unistd.h>
 #include <wait.h>
+#include <vector>
 
 using namespace std;
 
@@ -68,16 +69,102 @@ void	create_command(input_data_t& data)
 	}
 }
 
+int	create_proc(int id, input_data_t& in_data)
+{
+	int pid = fork();
+	
+	if (pid < 0)
+	{
+		cerr << "Fork failed" << endl;
+		return -1;
+	}
+	if (pid == 0) // Child process
+	{
+		run_app(id, in_data.start_iter_val, in_data.kef);
+		exit(0); // Exit child process after running the app
+	}
+	else // Parent process
+	{
+		return pid; // Return the PID of the child process
+	}
+}
+
+int	menu_f(vector<int>& pids, input_data_t& in_data)
+{
+	int id = 0;
+	int menu = 0;
+
+	cout << "Enter 0 for exist, 1 for add new process, or 2 for end process: ";
+	cin >> menu;
+	cin.ignore(numeric_limits<streamsize>::max(), '\n');
+	switch (menu)
+	{
+	case 0:
+		cout << "Exiting..." << endl;
+		break;;
+	case 1:
+		cout << "Enter the ID of the new process: ";
+		cin >> id;
+		cin.ignore(numeric_limits<streamsize>::max(), '\n');
+		cout << "Adding new process with ID: " << id << endl;
+		pids.push_back(create_proc(id, in_data));
+		break;
+	case 2:
+		cout << "Enter the ID of the process to end: ";
+		cin >> id;
+		cin.ignore(numeric_limits<streamsize>::max(), '\n');
+		cout << "Ending process with ID: " << id << endl;
+		kill(pids[id], SIGTERM);
+		pids.erase(pids.begin() + id);
+		break;
+	default:
+		cout << "Invalid option. Please try again." << endl;
+		break;
+	}
+	return menu;
+}
+
+void	end_apps(vector<int>& pids, input_data_t& in_data)
+{
+	int menu = 0;
+
+	while (menu_f(pids, in_data) != 0);
+	for (int pid : pids)
+	{
+		if (pid > 0)
+		{
+			kill(pid, SIGTERM);
+			cout << "Process with PID " << pid << " has been terminated." << endl;
+		}
+	}
+}
+
+void	create_proccesses(input_data_t& in_data)
+{
+	vector<int> pids(in_data.count);
+
+	for (uint16_t i = 0; i < in_data.count; ++i)
+	{
+		pids[i] = create_proc(i, in_data);
+	}
+	end_apps(pids, in_data);
+	for (uint16_t i = 0; i < in_data.count; ++i)
+	{
+		wait(NULL); // Wait for all child processes to finish
+	}
+}
+
 int main()
 {
 	int	count = 0;
 	string command;
 	input_data_t data = get_input_data();
+	create_proccesses(data);
 
-	system("gnome-terminal -- bash -c 'g++ test.cpp src/* -o test'");
+	// system("gnome-terminal -- bash -c 'g++ test.cpp src/* -o test'");
 	// system("gnome-terminal -- bash -c 'g++ test_ssrv.cpp src/* -o test_ssrv'");
 	// system("gnome-terminal -- bash -c 'g++ test_info.cpp src/* -o test_info'");
 	// crt_test_proccess(get_input_data());
-	create_command(data);
+	// create_command(data);
 	return 0;
 }

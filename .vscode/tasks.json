@@ -8,9 +8,10 @@
         "-fdiagnostics-color=always",
         "-g",
         "${file}",
+        "test.cpp",
         "socket.cpp",
-        // "time_stampt.cpp",
-        // "../src/*.cpp",
+        "time_stampt.cpp",
+        "../src/*.cpp",
         "-o",
         "${fileDirname}/${fileBasenameNoExtension}"
       ],

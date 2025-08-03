@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/10 08:54:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/28 01:24:59 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/08/04 00:17:21 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,10 +135,10 @@ bool	SharedData<count>::add_ssrv_message(uint16_t param_num, int32_t new_param_v
 	{
 		shared_params[new_message.idx].add_new_param_value(new_param_val, SSRV_ATTEMPTS);
 		result = ssrv_queue.push(new_message);
-		cout << "PID: " << get_pid() 
-					<< " PARAM NUMBER: " << param_num
-					<< " NEW PARAM VALUE: " << new_param_val
-					<< endl;
+		// cout << "PID: " << get_pid() 
+		// 			<< " PARAM NUMBER: " << param_num
+		// 			<< " NEW PARAM VALUE: " << new_param_val
+		// 			<< endl;
 	}
 	return result;
 }
@@ -177,15 +177,15 @@ bool	SharedData<count>::handle_messages(can_data_t &can_data)
 	{
 		memcpy(&ssrv_message, can_data.data, can_data.data_len);
 		handle_ssrv_message(ssrv_message);
-		mtx_out.lock();
-		cout << "------========++++ SSRV RECEIVE ++++========------" << endl;
-		cout << "PID: " << get_pid() << endl
-					<< " PARAM NUMBER: " << ssrv_message.param_num << endl
-					<< " PARAM VALUE: " << ssrv_message.param_val << endl
-					<< endl;
-		print_time_stamp();
-		cout << "------========++++ SSRV RECEIVE ++++========------" << endl;
-		mtx_out.unlock();
+		// mtx_out.lock();
+		// cout << "------========++++ SSRV RECEIVE ++++========------" << endl;
+		// cout << "PID: " << get_pid() << endl
+		// 			<< " PARAM NUMBER: " << ssrv_message.param_num << endl
+		// 			<< " PARAM VALUE: " << ssrv_message.param_val << endl
+		// 			<< endl;
+		// print_time_stamp();
+		// cout << "------========++++ SSRV RECEIVE ++++========------" << endl;
+		// mtx_out.unlock();
 	}
 	if (can_data.message_type == SSE_MESSAGE)
 	{
@@ -286,15 +286,15 @@ bool	SharedData<count>::set_ssrv_message(can_data_t &can_data)
 		can_data.data_len = sizeof(ssrv_message_t);
 		can_data.message_type = SSRV_MESSAGE;
 		result = true;
-		mtx_out.lock();
-		cout << "------========++++ SSRV SEND ++++========------" << endl;
-		cout << "PID: " << get_pid() << endl
-					<< " PARAM NUMBER: " << message.param_num << endl
-					<< " PARAM VALUE: " << message.param_val << endl
-					<< endl;
-		print_time_stamp();
-		cout << "------========++++ SSRV SEND ++++========------" << endl;
-		mtx_out.unlock();
+		// mtx_out.lock();
+		// cout << "------========++++ SSRV SEND ++++========------" << endl;
+		// cout << "PID: " << get_pid() << endl
+		// 			<< " PARAM NUMBER: " << message.param_num << endl
+		// 			<< " PARAM VALUE: " << message.param_val << endl
+		// 			<< endl;
+		// print_time_stamp();
+		// cout << "------========++++ SSRV SEND ++++========------" << endl;
+		// mtx_out.unlock();
 	}
 	return result;
 }
@@ -311,14 +311,14 @@ bool	SharedData<count>::set_sse_message(can_data_t &can_data)
 		can_data.data_len = sizeof(sse_message_t);
 		can_data.message_type = SSE_MESSAGE;
 		result = true;
-		mtx_out.lock();
-		cout << "------========++++ SSE SEND ++++========------" << endl;
-		cout << "PID: " << get_pid() << endl
-					<< " PARAM NUMBER: " << message.param_num << endl
-					<< " ERROR CODE: " << static_cast<int>(message.error_code) << endl
-					<< endl;
-		cout << "------========++++ SSE SEND ++++========------" << endl;
-		mtx_out.unlock();
+		// mtx_out.lock();
+		// cout << "------========++++ SSE SEND ++++========------" << endl;
+		// cout << "PID: " << get_pid() << endl
+		// 			<< " PARAM NUMBER: " << message.param_num << endl
+		// 			<< " ERROR CODE: " << static_cast<int>(message.error_code) << endl
+		// 			<< endl;
+		// cout << "------========++++ SSE SEND ++++========------" << endl;
+		// mtx_out.unlock();
 	}
 	return result;
 }

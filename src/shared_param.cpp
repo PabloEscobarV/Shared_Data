@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shared_param.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/07/21 10:29:28 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/08/04 00:17:19 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,15 +63,15 @@ bool	SharedParam::handle_ssv_m(const ssv_message_t& message, uint16_t idx, uint1
 	{
 		if (is_req_update_param_value(message, idx, idx_can))
 		{
-			mtx_out.lock();
-			cout << "------========++++ SSV RECEIVE ++++========------" << endl;
-			cout << "PID: " << get_pid() << endl
-						<< "PARAM NUMBER: " << message.param_num << endl
-						<< "PARAM VALUE: " << message.param_val << endl
-						<< "ITERATOR: " << message.iterator << endl
-						<< endl;
-			cout << "------========++++ SSV RECEIVE ++++========------" << endl;
-			mtx_out.unlock();
+			// mtx_out.lock();
+			// cout << "------========++++ SSV RECEIVE ++++========------" << endl;
+			// cout << "PID: " << get_pid() << endl
+			// 			<< "PARAM NUMBER: " << message.param_num << endl
+			// 			<< "PARAM VALUE: " << message.param_val << endl
+			// 			<< "ITERATOR: " << message.iterator << endl
+			// 			<< endl;
+			// cout << "------========++++ SSV RECEIVE ++++========------" << endl;
+			// mtx_out.unlock();
 			set_param_value(message.param_val);
 		}
 	}
@@ -102,14 +102,14 @@ bool	SharedParam::handle_sse_m(const sse_message_t& message)
 	if (get_bit(err_code, SET_SSRV_COUNTER) && get_bit(message.error_code, OUT_OF_RANGE_SSRV))
 	{
 		set_bit(&err_code, NEW_VAL_REQ_NOT_ALLOWED, true);
-		mtx_out.lock();
-		cout << "------========++++ SSE RECEIVE ++++========------" << endl;
-		cout << "PID: " << get_pid() << endl
-					<< " PARAM NUMBER: " << param_num << endl
-					<< " ERROR CODE: " << static_cast<int>(message.error_code) << endl
-					<< endl;
-		cout << "------========++++ SSE RECEIVE ++++========------" << endl;
-		mtx_out.unlock();
+		// mtx_out.lock();
+		// cout << "------========++++ SSE RECEIVE ++++========------" << endl;
+		// cout << "PID: " << get_pid() << endl
+		// 			<< " PARAM NUMBER: " << param_num << endl
+		// 			<< " ERROR CODE: " << static_cast<int>(message.error_code) << endl
+		// 			<< endl;
+		// cout << "------========++++ SSE RECEIVE ++++========------" << endl;
+		// mtx_out.unlock();
 	}
 	return true;
 }

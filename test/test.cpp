@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/07/30 00:00:16 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/08/04 00:18:39 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,12 +52,12 @@ bool	check_param_data(ParamData<P_COUNT> *param_data, ParamData<P_COUNT> *old_pa
 	{
 		if (param_data->get_param_value(i) != old_param_data->get_param_value(i))
 		{
-			mtx_out.lock();
-			cout << "Param " << param_data->get_param_num(i) << " changed from "
-					 << old_param_data->get_param_value(i) << " to "
-					 << param_data->get_param_value(i) << endl;
-			print_time_stamp();
-			mtx_out.unlock();
+			// mtx_out.lock();
+			// cout << "Param " << param_data->get_param_num(i) << " changed from "
+			// 		 << old_param_data->get_param_value(i) << " to "
+			// 		 << param_data->get_param_value(i) << endl;
+			// print_time_stamp();
+			// mtx_out.unlock();
 			old_param_data->set_param_value(i, param_data->get_param_num(i), param_data->get_param_value(i));
 			changed = true;
 		}
@@ -113,14 +113,14 @@ void	send_test_data(udp_data_t& udp_data,
 				old_param_data->set_param_value(i, test_data.param_num, test_data.param_val);
 				send_udp(udp_data, test_data);
 
-				mtx_out.lock();
-				cout << "Sender PID: " << test_data.pid
-						 << ", Param Index: " << test_data.param_idx
-						 << ", Param Number: " << test_data.param_num
-						 << ", Param Value: " << test_data.param_val
-						 << ", Iterator: " << test_data.iterator << endl;
-				print_time_stamp();
-				mtx_out.unlock();
+				// mtx_out.lock();
+				// cout << "Sender PID: " << test_data.pid
+				// 		 << ", Param Index: " << test_data.param_idx
+				// 		 << ", Param Number: " << test_data.param_num
+				// 		 << ", Param Value: " << test_data.param_val
+				// 		 << ", Iterator: " << test_data.iterator << endl;
+				// print_time_stamp();
+				// mtx_out.unlock();
 			}
 		}
 		this_thread::sleep_for(chrono::milliseconds(TICK_PERIOD));
@@ -157,11 +157,11 @@ void	receive_ssrv_request(udp_data_t& udp_data,
 		receive_udp(udp_data, ssrv_req_message);
 		if (ssrv_req_message.id == get_pid())
 		{
-			mtx_out.lock();
-			cout << "Received SSRV request for: " << ssrv_req_message.id
-						<< ", Param Index: " << ssrv_req_message.param_idx
-						<< ", Param Value: " << ssrv_req_message.param_val << endl;
-			mtx_out.unlock();
+			// mtx_out.lock();
+			// cout << "Received SSRV request for: " << ssrv_req_message.id
+			// 			<< ", Param Index: " << ssrv_req_message.param_idx
+			// 			<< ", Param Value: " << ssrv_req_message.param_val << endl;
+			// mtx_out.unlock();
 			shared_data->add_ssrv_message(param_data->get_param_num(ssrv_req_message.param_idx), ssrv_req_message.param_val);
 		}
 	}
@@ -181,18 +181,18 @@ void	crt_trhreads(SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_da
 	});
 	thread	send_test_data_thread([&]()
 	{
-		mtx_out.lock();
-		cout << "Sender test data thread started." << endl;
-		mtx_out.unlock();
+		// mtx_out.lock();
+		// cout << "Sender test data thread started." << endl;
+		// mtx_out.unlock();
 		udp_data_t udp_data_sender = create_sender_socket(MULTICAST_TEST_IP, MULTICAST_TEST_PORT);
 		send_test_data(udp_data_sender, shared_data, param_data);
 		close(udp_data_sender.sock_fd);
 	});
 	thread sender_thread([&]()
 	{
-		mtx_out.lock();
-		cout << "Sender thread started." << endl;
-		mtx_out.unlock();
+		// mtx_out.lock();
+		// cout << "Sender thread started." << endl;
+		// mtx_out.unlock();
 		udp_data_t udp_data_sender = create_sender_socket();
 		send_ssv(udp_data_sender, shared_data, param_data);
 		close(udp_data_sender.sock_fd);
@@ -200,18 +200,18 @@ void	crt_trhreads(SharedData<P_COUNT> *shared_data, ParamData<P_COUNT> *param_da
 	});
 	thread receiver_thread([&]()
 	{
-		mtx_out.lock();
-		cout << "Receiver thread started." << endl;
-		mtx_out.unlock();
+		// mtx_out.lock();
+		// cout << "Receiver thread started." << endl;
+		// mtx_out.unlock();
 		udp_data_t udp_data_receiver = create_receive_socket();
 		receiver_ssv(udp_data_receiver, shared_data, param_data);
 		close(udp_data_receiver.sock_fd);
 	});
 	thread ssrv_receiver_thread([&]()
 	{
-		mtx_out.lock();
-		cout << "SSRV Receiver thread started." << endl;
-		mtx_out.unlock();
+		// mtx_out.lock();
+		// cout << "SSRV Receiver thread started." << endl;
+		// mtx_out.unlock();
 		udp_data_t udp_data_ssrv_receiver = create_receive_socket(MULTICAST_SSRV_IP, MULTICAST_SSRV_PORT);
 		receive_ssrv_request(udp_data_ssrv_receiver, shared_data, param_data);
 		close(udp_data_ssrv_receiver.sock_fd);
@@ -255,36 +255,46 @@ void	init_shared_data(SharedData<P_COUNT> *shared_data,
 	}
 }
 
-int main(int argc, char *argv[])
+void	run_app(uint16_t pid, uint16_t iterator_start_value, uint16_t param_kef)
 {
-	uint16_t iterator_start_value;
-	uint16_t param_kef = 0;
 	param_data = new ParamData<P_COUNT>();
 	old_param_data = new ParamData<P_COUNT>();
 	shared_data = new SharedData<P_COUNT>();
+
+	PID = pid; // Limit PID to 3 digits for easier reading
 	srand(time(NULL) + get_pid() + getpid()); // Seed random number generator with current time and process ID
-	PID = getpid(); // Limit PID to 3 digits for easier reading
-	if (argc < 4)
-	{
-		cout << "Enter process ID (PID): \n";
-		cin >> PID;
-		cout << "Enter iterator start value: \n";
-		cin >> iterator_start_value;
-		cout << "Enter parameter step kef: \n";
-		cin >> param_kef;
-	}
-	else
-	{
-		PID = static_cast<uint16_t>(atoi(argv[1]));
-		iterator_start_value = static_cast<uint16_t>(atoi(argv[2]));
-		param_kef = static_cast<uint16_t>(atoi(argv[3]));
-		cout << "PID: " << get_pid() << endl;
-	}
-	cout << "PID: " << get_pid() << endl;
 	init_param_data(param_data, old_param_data,  param_kef);
 	init_shared_data(shared_data, param_data, iterator_start_value);
-	print_param_data(param_data);
+	// print_param_data(param_data);
 	crt_trhreads(shared_data, param_data, old_param_data);
 	delete param_data;
 	delete shared_data;
 }
+
+// int main(int argc, char *argv[])
+// {
+// 	uint16_t iterator_start_value;
+// 	uint16_t param_kef = 0;
+
+// 	srand(time(NULL) + get_pid() + getpid()); // Seed random number generator with current time and process ID
+// 	PID = getpid(); // Limit PID to 3 digits for easier reading
+// 	if (argc < 4)
+// 	{
+// 		cout << "Enter process ID (PID): \n";
+// 		cin >> PID;
+// 		cout << "Enter iterator start value: \n";
+// 		cin >> iterator_start_value;
+// 		cout << "Enter parameter step kef: \n";
+// 		cin >> param_kef;
+// 	}
+// 	else
+// 	{
+// 		PID = static_cast<uint16_t>(atoi(argv[1]));
+// 		iterator_start_value = static_cast<uint16_t>(atoi(argv[2]));
+// 		param_kef = static_cast<uint16_t>(atoi(argv[3]));
+// 		cout << "PID: " << get_pid() << endl;
+// 	}
+// 	cout << "PID: " << get_pid() << endl;
+// 	run_app(PID, iterator_start_value, param_kef);
+// 	return 0;
+// }

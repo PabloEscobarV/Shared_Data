@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:28:21 by blackrider        #+#    #+#             */
-/*   Updated: 2025/08/03 19:06:32 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/08/03 23:59:12 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@ struct heartbeat_t
 };
 
 uint16_t	get_pid();
+void	run_app(uint16_t pid, uint16_t iterator_start_value, uint16_t param_kef);
 // void	start_test(uint16_t pid, uint16_t iterator_start_value, uint16_t param_kef);
 
 #endif // TEST_HPP
