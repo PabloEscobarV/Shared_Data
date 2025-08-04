@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shared_data.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/10 08:54:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/08/04 00:17:21 by Pablo Escob      ###   ########.fr       */
+/*   Created: 2025/08/04 09:50:37 by blackrider        #+#    #+#             */
+/*   Updated: 2025/08/04 09:54:30 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,12 +133,18 @@ bool	SharedData<count>::add_ssrv_message(uint16_t param_num, int32_t new_param_v
 
 	if (new_message.idx < count)
 	{
-		shared_params[new_message.idx].add_new_param_value(new_param_val, SSRV_ATTEMPTS);
-		result = ssrv_queue.push(new_message);
+		if (shared_params[new_message.idx].add_new_param_value(new_param_val, SSRV_ATTEMPTS))
+		{
+			result = ssrv_queue.push(new_message);
+		}
+		// mtx_out.lock();
+		// cout << "------========++++ SSRV ADD NEW MESSAGE ++++========------" << endl;
 		// cout << "PID: " << get_pid() 
 		// 			<< " PARAM NUMBER: " << param_num
 		// 			<< " NEW PARAM VALUE: " << new_param_val
 		// 			<< endl;
+		// cout << "------========++++ SSRV ADD NEW MESSAGE ++++========------" << endl;
+		// mtx_out.unlock();
 	}
 	return result;
 }

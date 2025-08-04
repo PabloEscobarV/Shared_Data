@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/11 10:28:21 by blackrider        #+#    #+#             */
-/*   Updated: 2025/08/03 23:59:12 by Pablo Escob      ###   ########.fr       */
+/*   Created: 2025/08/04 09:50:57 by blackrider        #+#    #+#             */
+/*   Updated: 2025/08/04 09:55:12 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <netinet/in.h>    // sockaddr_in structure
 #include <arpa/inet.h>     // inet_addr(), inet_ntoa(), etc.
 
-#define P_COUNT 64
+#define P_COUNT 110
 
 struct	udp_data_t
 {

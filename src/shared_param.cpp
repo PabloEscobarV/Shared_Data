@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shared_param.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/09 21:45:02 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/08/04 00:17:19 by Pablo Escob      ###   ########.fr       */
+/*   Created: 2025/08/04 09:51:08 by blackrider        #+#    #+#             */
+/*   Updated: 2025/08/04 09:51:12 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,6 +90,10 @@ bool	SharedParam::handle_ssrv_m(const ssrv_message_t& message)
 	{
 		set_bit(&err_code, OUT_OF_RANGE_SSRV, true);
 	}
+	else
+	{
+		set_bit(&err_code, OUT_OF_RANGE_SSRV, false);
+	}
 	return result;
 }
 
@@ -129,12 +133,17 @@ bool	SharedParam::accept_new_value()
 
 bool	SharedParam::add_new_param_value(int32_t new_param_val, uint8_t ssrv_atmp_counter)
 {
-	bool	result = !get_bit(err_code, SET_SSRV_COUNTER);
+	bool	result = false;
 	
-	if (result)
+	if (!get_bit(err_code, SET_SSRV_COUNTER))
 	{
-		new_param_value = new_param_val;
-		set_ssrv_end_counter(ssrv_atmp_counter);
+		// if (new_param_value <= get_param_max_value())
+		// {
+			new_param_value = new_param_val;
+			set_ssrv_end_counter(ssrv_atmp_counter);
+			set_bit(&err_code, NEW_VAL_REQ_NOT_ALLOWED, false);
+			result = true;
+		// }
 	}
 	return result;
 }
