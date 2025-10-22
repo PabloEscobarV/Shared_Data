@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/08/04 00:18:39 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/08/04 01:32:09 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@
 #include <sys/mman.h>
 #include <mutex>
 
-#define SEND_DURATION		100000
+#define SEND_DURATION		1000000000
 #define TICK_PERIOD			20 // Period in milliseconds for the tick counter
 
 using namespace std;
