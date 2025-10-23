@@ -1,44 +1,20 @@
-/*******************************************************************************************************************
- *  @file shared_data.cpp
- *  @brief Shared data management for distributed parameter synchronization via CAN.
- *
- *  @date Created: 2025/07/10 08:54:29
- *  @date Updated: 2025/07/21 14:26:02
- *
- *  @par Copyright (c) 2025 ComAp a.s  All rights reserved.
- *******************************************************************************************************************/
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   shared_data.cpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/10/23 21:11:03 by Pablo Escob       #+#    #+#             */
+/*   Updated: 2025/10/23 21:13:30 by Pablo Escob      ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-// own header
 #include "shared_data.hpp"
-
-// other includes
-#include "addr_mngr.hpp"                        // Addr_mngr – addresses mapping helper
-#include "comm.h"                               // NUM_SYNC_PARAM, sync_param_list
-#include "csl_cmp_int.hpp"                      // csl_cmp_int – NOT_VALID constant and helpers
-#include "can_app_ic_notify_new_data_ifc.hpp"   // Can_app_ic_notify_new_data_ifc – notify interface
-#include "csl_new.hpp"                          // csl_new_assert
-#include "../can_data_handler_ifc.hpp"          // Can_data_handler_ifc – base class interface
-#include "iallocator.hpp"                       // IAllocator – memory allocator interface
-#include "fixed_size_queue/queue.hpp"           // FSQueue – fixed-size queue for messages
-#include "shared_param/shared_param.hpp"        // Shared_param – setpoint synchronization state machine
-
-extern "C"
-{
-  #include "csl_states_history_ifc.h"           // states_serve_err_now
-  #include "states_def.h"                       // idx_s_ ...
-  #include "csl_printf.h"                       // csl_printf
-}
-
-// standard library includes
+#include "fixed_size_queue/queue.hpp"
+#include "shared_param/shared_param.hpp"
 #include <stdint.h>
 #include <string.h>
-
-namespace comap
-{
-
-/* ================================================================================================================
- *  Private class type static members definition
- * ============================================================================================================== */
 
   const uint16_t Shared_data::SSRV_MSG_FLAGS[Shared_data::PACK_SIZE] =
   {
@@ -52,9 +28,6 @@ namespace comap
     1 << Shared_data::SSRV_MESSAGE_7
   };
 
-/* ================================================================================================================
- *  Private class type methods definition
- * ============================================================================================================== */
 
 Shared_data::ssv_message_t::ssv_message_t(const uint8_t *ptr_data, const uint16_t data_len)
   : iterator(0),
@@ -172,11 +145,6 @@ data_t Shared_data::can_data_t::get_data()
   return result;
 }
 
-/* ================================================================================================================
- *  Public class methods definition
- * ============================================================================================================== */
-
-/* see header file */
 Shared_data::Shared_data()
   : shared_data_event(0),
     ptr_thread(nullptr),
@@ -189,13 +157,12 @@ Shared_data::Shared_data()
 
 }
 
-/* see header file */
 bool  Shared_data::add_ssrv_message(const uint16_t param_num, const uint8_t *ptr_new_param_val)
 {
   uint8_t ssrv_idx;
   bool  result = false;
 
-  if (Bit::test(state, SYNCED)) // blocking on 10 sec. after import configuration.
+  if (Bit::test(state, SYNCED))
   {
     ssrv_idx = get_sync_param_list_idx(param_num);
     if ((ssrv_idx < COUNT) && (shared_buffer.set_offset(get_all_comm_obj_len(ssrv_idx))))
@@ -212,7 +179,6 @@ bool  Shared_data::add_ssrv_message(const uint16_t param_num, const uint8_t *ptr
   return result;
 }
 
-/* see header file */
 bool Shared_data::get_message(Can_app_message& can_app_message)
 {
   can_data_t can_data;
@@ -229,21 +195,10 @@ bool Shared_data::get_message(Can_app_message& can_app_message)
                                       can_data.messages_size
                                     );
     result = true;
-    // csl_nprintf(80,
-    //     "%s%s%s %lu%s%d%s%s\n",
-    //     DARK_RED,
-    //     BOLD,
-    //     __func__,
-    //     __LINE__,
-    //     "\n--- GET MSG: TYPE ",
-    //     (int)can_app_message.get_type(),
-    //     " ---\n",
-    //     RESET_FORMAT);
   }
   return result;
 }
 
-/* see header file */
 void Shared_data::initialize(cmsis::Cmsis_thread *thread_ptr, const uint8_t cu_can_address, const uint32_t event_mask)
 {
   ptr_thread = thread_ptr;
@@ -256,7 +211,6 @@ void Shared_data::initialize(cmsis::Cmsis_thread *thread_ptr, const uint8_t cu_c
   }
 }
 
-/* see header file */
 bool Shared_data::process_message(const Can_app_message& can_app_message)
 {
   bool result = false;
@@ -265,15 +219,6 @@ bool Shared_data::process_message(const Can_app_message& can_app_message)
                       can_app_message.get_source_controller_id(),
                       can_app_message.get_flags());
 
-  csl_nprintf(80,
-    "%s%s%s %lu%s%s\n",
-    DARK_RED,
-    BOLD,
-    __func__,
-    __LINE__,
-    "\n--- PROCCESS MSG ---\n",
-    RESET_FORMAT);
-
   if (can_data.data && (can_data.data_len <= MAX_DATA_LEN) && is_cfg_valid())
   {
     result = handle_messages(can_data);
@@ -281,7 +226,6 @@ bool Shared_data::process_message(const Can_app_message& can_app_message)
   return result;
 }
 
-/* see header file */
 void Shared_data::service()
 {
   period_counter();
@@ -294,17 +238,11 @@ void Shared_data::service()
   set_msg_request();
 }
 
-/* see header file */
 bool Shared_data::sync_param_are_synced()
 {
   return Bit::test(state, SYNCED);
 }
 
-/* ================================================================================================================
- *  Private class methods definition
- * ============================================================================================================== */
-
-/* see header file */
 bool  Shared_data::check_counter_ssv() const
 {
   bool  result = true;
@@ -319,7 +257,6 @@ bool  Shared_data::check_counter_ssv() const
   return result;
 }
 
-/* see header file */
 uint16_t  Shared_data::check_ssrv_wait_counter()
 {
   uint16_t  idx = 0;
@@ -337,7 +274,6 @@ uint16_t  Shared_data::check_ssrv_wait_counter()
   return idx;
 }
 
-/* see header file */
 bool Shared_data::check_ssrv_new_value()
 {
   bool result = false;
@@ -353,7 +289,6 @@ bool Shared_data::check_ssrv_new_value()
   return result;
 }
 
-/* see header file */
 uint16_t Shared_data::get_all_comm_obj_len(const uint16_t comm_obj_idx) const
 {
   uint16_t total_length = 0;
@@ -369,7 +304,6 @@ uint16_t Shared_data::get_all_comm_obj_len(const uint16_t comm_obj_idx) const
   return total_length;
 }
 
-/* see header file */
 bool  Shared_data::get_messages(can_data_t &can_data)
 {
   bool  result = false;
@@ -392,19 +326,10 @@ bool  Shared_data::get_messages(can_data_t &can_data)
   return result;
 }
 
-/* see header file */
 bool  Shared_data::get_ssv_message(ssv_message_t &message)
 {
   bool result = false;
 
-  // csl_nprintf(80,
-  //   "%s%s%s %lu%s%s\n",
-  //   DARK_RED,
-  //   BOLD,
-  //   __func__,
-  //   __LINE__,
-  //   "\n--- GET SSV MSG ---\n",
-  //   RESET_FORMAT);
   if (idx_ssv_new == csl_cmp_int<uint16_t>::NOT_VALID)
   {
     result = write_ssv_data(idx_ssv, message);
@@ -418,7 +343,6 @@ bool  Shared_data::get_ssv_message(ssv_message_t &message)
   return result;
 }
 
-/* see header file */
 bool  Shared_data::get_ssrv_message(ssrv_message_t &message)
 {
   uint8_t ssrv_idx;
@@ -436,7 +360,6 @@ bool  Shared_data::get_ssrv_message(ssrv_message_t &message)
   return result;
 }
 
-/* see header file */
 bool  Shared_data::get_sse_message(sse_message_t &message)
 {
   sse_service_t  sse_service;
@@ -454,7 +377,6 @@ bool  Shared_data::get_sse_message(sse_message_t &message)
   return result;
 }
 
-/* see header file */
 bool  Shared_data::get_ssv_msg_data(can_data_t &can_data)
 {
   ssv_message_t  message;
@@ -467,7 +389,6 @@ bool  Shared_data::get_ssv_msg_data(can_data_t &can_data)
   return result;
 }
 
-/* see header file */
 bool  Shared_data::get_ssrv_msg_data(can_data_t &can_data)
 {
   ssrv_message_t  message;
@@ -480,7 +401,6 @@ bool  Shared_data::get_ssrv_msg_data(can_data_t &can_data)
   return result;
 }
 
-/* see header file */
 bool  Shared_data::get_sse_msg_data(can_data_t &can_data)
 {
   sse_message_t  message;
@@ -493,7 +413,6 @@ bool  Shared_data::get_sse_msg_data(can_data_t &can_data)
   return result;
 }
 
-/* see header file */
 uint8_t  Shared_data::get_sync_param_list_idx(const uint16_t co_num) const
 {
   uint8_t   left = 0;
@@ -523,7 +442,6 @@ uint8_t  Shared_data::get_sync_param_list_idx(const uint16_t co_num) const
   return mid;
 }
 
-/* see header file */
 bool  Shared_data::handle_messages(can_data_t &can_data)
 {
   bool  result = false;
@@ -546,22 +464,12 @@ bool  Shared_data::handle_messages(can_data_t &can_data)
   return result;
 }
 
-/* see header file */
 bool  Shared_data::handle_ssv_message(const ssv_message_t &message,
                                             const uint16_t id,
                                             const uint16_t id_can)
 {
   sse_service_t  sse_service;
   bool  result = false;
-
-  csl_nprintf(80,
-    "%s%s%s %lu%s%s\n",
-    DARK_RED,
-    BOLD,
-    __func__,
-    __LINE__,
-    "\n--- HANDLE SSV MSG ---\n",
-    RESET_FORMAT);
 
   sse_service.counter = SSRV_ATTEMPTS;
   sse_service.idx = get_sync_param_list_idx(message.param_num);
@@ -577,7 +485,6 @@ bool  Shared_data::handle_ssv_message(const ssv_message_t &message,
   return result;
 }
 
-/* see header file */
 bool  Shared_data::handle_ssrv_message(const ssrv_message_t &message)
 {
   sse_service_t  sse_service;
@@ -598,7 +505,6 @@ bool  Shared_data::handle_ssrv_message(const ssrv_message_t &message)
   return result;
 }
 
-/* see header file */
 bool  Shared_data::handle_sse_message(const sse_message_t &message)
 {
   bool  result = false;
@@ -628,10 +534,9 @@ void Shared_data::ssrv_time_management(const uint16_t ssrv_idx)
   }
 }
 
-/* see header file */
 void Shared_data::service_ssv()
 {
-  if (Bit::test(state, SYNCED)) // blocking on 10 sec. after import configuration.
+  if (Bit::test(state, SYNCED))
   {
     if (check_ssrv_new_value() || ((tick != 0) && (tick % Shared_data::SSV_PERIOD == 0)))
     {
@@ -640,7 +545,6 @@ void Shared_data::service_ssv()
   }
 }
 
-/* see header file */
 void Shared_data::service_ssrv()
 {
   if ((!ssrv_queue.is_empty()) && (tick != 0) && (tick % Shared_data::SSRV_PERIOD == 0))
@@ -649,7 +553,6 @@ void Shared_data::service_ssrv()
   }
 }
 
-/* see header file */
 void Shared_data::service_sse()
 {
   if ((!sse_queue.is_empty()) && (tick != 0) && (tick % Shared_data::SSE_PERIOD == 0))
@@ -658,7 +561,6 @@ void Shared_data::service_sse()
   }
 }
 
-/* see header file */
 void Shared_data::service_shared_param()
 {
   if ((tick != 0) && (tick % Shared_data::SSV_ALL_PERIOD == 0))
@@ -670,7 +572,6 @@ void Shared_data::service_shared_param()
   }
 }
 
-/* see header file */
 void Shared_data::service_wrn_state()
 {
   bool is_err = false;
@@ -725,5 +626,3 @@ bool  Shared_data::write_ssv_data(const uint16_t idx, ssv_message_t &message)
   }
   return result;
 }
-
-} // namespace comap
