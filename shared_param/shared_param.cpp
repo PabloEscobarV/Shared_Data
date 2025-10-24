@@ -6,12 +6,14 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:02:52 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/23 21:13:33 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/24 21:28:40 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "shared_param.hpp"
 
 #include "../p_iterator/p_iterator.hpp"
+#include "../param_data/param_data.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -33,10 +35,6 @@ bool Shared_param::accept_new_value(const uint16_t co_num, Shared_buffer& shared
     update_iterator();
     reset_out_of_range_ssv_state();
   }
-  else
-  {
-    set_param_value(co_num, co_descr_t());
-  }
   reset_counter();
   return result;
 }
@@ -44,11 +42,10 @@ bool Shared_param::accept_new_value(const uint16_t co_num, Shared_buffer& shared
 bool Shared_param::add_new_value(const uint16_t co_num, Shared_buffer& shared_buffer, const uint8_t *ptr_new_param_val)
 {
   bool result = false;
-  co_descr_t descr;
 
-  if (check_new_value(co_num, ptr_new_param_val, descr))
+  if (check_new_value(co_num, ptr_new_param_val))
   {
-    (void)shared_buffer.write_data(ptr_new_param_val, descr.len);
+    (void)shared_buffer.write_data(ptr_new_param_val, sizeof(uint32_t));
     reset_out_of_range_ssrv_state();
     reset_new_value_not_allowed_state();
     result = true;
@@ -59,28 +56,24 @@ bool Shared_param::add_new_value(const uint16_t co_num, Shared_buffer& shared_bu
 bool Shared_param::get_new_value(const uint16_t co_num, Shared_buffer& shared_buffer, uint8_t *ptr_data) const
 {
   bool result = false;
-  co_descr_t descr;
+  int param_len = param_data.get_param_value(co_num);
 
-  if (ptr_data && get_descr(co_num, descr))
+  if (ptr_data)
   {
-    result = shared_buffer.read_data(ptr_data, descr.len);
+    result = shared_buffer.read_data(ptr_data, param_len);
   }
   return result;
 }
 
 bool Shared_param::get_param_value(const uint16_t co_num, uint8_t *ptr_dest) const
 {
-  co_descr_t descr;
-  bool  result = false;
-
-  if (ptr_dest && get_descr(co_num, descr) && (descr.len <= SHARED_PARM_MAX_DATA_LEN))
+  uint32_t value = param_data.get_param_value(co_num);
+  
+  if (value == ParamData::invalid_param_value())
   {
-    if (csl_app_comm_obj_read(&descr, ptr_dest, SHARED_PARM_MAX_DATA_LEN))
-    {
-      result = true;
-    }
+    return false;
   }
-  return result;
+  return true;
 }
 
 bool Shared_param::handle_ssv_value(const uint16_t co_num,
@@ -172,129 +165,22 @@ void Shared_param::service()
   }
 }
 
-bool Shared_param::check_new_value(const uint16_t co_num, const uint8_t *ptr_new_param_val, co_descr_t& descr) const
+bool Shared_param::check_new_value(const uint16_t co_num, const uint8_t *ptr_new_param_val) const
 {
   return (ptr_new_param_val != nullptr)
           && (!is_new_val_send_state())
           && (!is_new_val_wait_state())
-          && get_descr(co_num, descr)
           && is_param_val_in_range(co_num, ptr_new_param_val);
 }
 
-template<typename data_t>
-int16_t Shared_param::cmp_data_with_type(const data_t a, const data_t b) const
-{
-  if (a < b)
-  {
-    return FIRST_LESS;
-  }
-  if (a > b)
-  {
-    return FIRST_GREATER;
-  }
-  return EQUAL;
-}
-
-template<>
-int16_t Shared_param::cmp_data_with_type<float32_t>(const float32_t a, const float32_t b) const
-{
-  float32_t result = a - b;
-
-  if (fabs(result) <= FLOAT_PRECISION)
-  {
-    return EQUAL;
-  }
-  if (result < 0.0f)
-  {
-    return FIRST_LESS;
-  }
-  return FIRST_GREATER;
-}
-
-int16_t Shared_param::cmp_data_correct_type(const uint8_t* ptr_first_data,
-                                            const uint8_t* ptr_second_data,
-                                            const uint8_t data_type) const
-{
-  int16_t result = CMP_ERROR;
-
-  switch (data_type)
-  {
-    case ctd_INTEGER8:
-      result = set_cmp_data<int8_t>(ptr_first_data, ptr_second_data);
-      break;
-    case ctd_INTEGER16:
-      result = set_cmp_data<int16_t>(ptr_first_data, ptr_second_data);
-      break;
-    case ctd_INTEGER32:
-      result = set_cmp_data<int32_t>(ptr_first_data, ptr_second_data);
-      break;
-    case ctd_FLOAT:
-      result = set_cmp_data<float32_t>(ptr_first_data, ptr_second_data);
-      break;
-    case ctd_UNSIGNED8:
-    case ctd_BINARY8:
-    case ctd_STRLIST:
-    case ctd_CHAR:
-      result = set_cmp_data<uint8_t>(ptr_first_data, ptr_second_data);
-      break;
-    case ctd_UNSIGNED16:
-    case ctd_BINARY16:
-      result = set_cmp_data<uint16_t>(ptr_first_data, ptr_second_data);
-      break;
-    case ctd_UNSIGNED32:
-    case ctd_BINARY32:
-      result = set_cmp_data<uint32_t>(ptr_first_data, ptr_second_data);
-      break;
-    default:
-      break;
-  }
-  return result;
-}
-
-bool Shared_param::get_descr(const uint16_t co_num, co_descr_t& descr) const
+bool Shared_param::is_data_new(const uint16_t co_num, const uint8_t *ptr_new_param_value) const
 {
   bool result = false;
+  uint32_t new_value = 0;
 
-  if ((app_comm_obj_get_descr(co_num, &descr) == CO_DEF) && (descr.type == CO_SPAR))
+  if (ptr_new_param_value)
   {
-    result = true;
-  }
-  return result;
-}
-
-Shared_param::setpoint_limits_t Shared_param::get_setpoint_limits(const cfg_il3f_descr_par_t& setpoint_description) const
-{
-  setpoint_limits_t limits;
-
-  limits.low_limit = static_cast<uint32_t>(setpoint_description.low_limit);
-  limits.high_limit = static_cast<uint32_t>(setpoint_description.high_limit);
-  if (ctd_STRLIST == setpoint_description.type)
-  {
-    limits.low_limit = 0;
-    limits.high_limit = limits.high_limit - limits.low_limit;
-  }
-  if (0 != setpoint_description.var_low_limit)
-  {
-    limits.low_limit = read_param_value(static_cast<uint16_t>(limits.low_limit));
-  }
-  if (0 != setpoint_description.var_high_limit)
-  {
-    limits.high_limit = read_param_value(static_cast<uint16_t>(limits.high_limit));
-  }
-  return limits;
-}
-
-bool Shared_param::is_data_new(const co_descr_t& descr, const uint8_t *ptr_new_param_value) const
-{
-  bool result = false;
-  uint32_t actual_value = 0;
-
-  if (ptr_new_param_value && setpoint_read(descr.addr, descr.len, &actual_value))
-  {
-    if (descr.len <= SHARED_PARM_MAX_DATA_LEN)
-    {
-      result = (memcmp(&actual_value, ptr_new_param_value, descr.len) != 0);
-    }
+    result = (new_value != param_data.get_param_value(param_data.get_param_idx(co_num)));
   }
   return result;
 }
@@ -322,75 +208,25 @@ bool Shared_param::is_req_update_param_value(const uint16_t iter_synchro,
 bool Shared_param::is_param_val_in_range(const uint16_t co_num, const uint8_t *ptr_new_data) const
 {
   bool in_range = true;
-  cfg_il3f_descr_par_t setpoint_description;
-  setpoint_limits_t limits;
-  co_descr_t descr;
-  const uint16_t param_cfg_idx = cfg_get_param_idx(co_num);
+  uint32_t new_value = 0;
 
-  if ((param_cfg_idx < cfg_get_num_par(pt_ALL)) && (ptr_new_data != nullptr))
+  if (ptr_new_data != nullptr)
   {
-    get_descr(co_num, descr);
-    cfg_get_descr_par_item(param_cfg_idx, &setpoint_description);
-    limits = get_setpoint_limits(setpoint_description);
-    in_range = cmp_data_correct_type(ptr_new_data,
-              reinterpret_cast<uint8_t *>(&limits.low_limit), descr.data_type) != FIRST_LESS;
-    in_range &= cmp_data_correct_type(ptr_new_data,
-                reinterpret_cast<uint8_t *>(&limits.high_limit), descr.data_type) != FIRST_GREATER;
+    (void)memcpy(&new_value, ptr_new_data, sizeof(uint32_t));
+    in_range = new_value >= param_data.get_param_min_value(co_num)
+               && new_value <= param_data.get_param_max_value(co_num);
   }
   return in_range;
 }
 
-uint32_t Shared_param::read_param_value(const uint16_t param_cfg_idx) const
-{
-  uint32_t value = 0;
-
-  cfg_il3f_search_par_t search_par_item;
-  cfg_get_search_par_item(param_cfg_idx, &search_par_item);
-  get_param_value(search_par_item.comm_obj, reinterpret_cast<uint8_t *>(&value));
-  return value;
-}
-
-template <typename data_t>
-int16_t Shared_param::set_cmp_data(const uint8_t* ptr_first_data, const uint8_t* ptr_second_data) const
-{
-  data_t first_value = 0;
-  data_t second_value = 0;
-
-  (void)memcpy(&first_value, ptr_first_data, sizeof(data_t));
-  (void)memcpy(&second_value, ptr_second_data, sizeof(data_t));
-  return cmp_data_with_type<data_t>(first_value, second_value);
-}
-
-bool Shared_param::set_param_value(const uint16_t co_num, const co_descr_t& descr, const uint8_t *ptr_param_value) const
-{
-  uint16_t param_cfg_idx = cfg_get_param_idx(co_num);
-  bool result = (ptr_param_value != nullptr);
-
-  if (param_cfg_idx < cfg_get_num_par(pt_ALL))
-  {
-    result = result && (acodr_ok == sys_param_write_term(descr.addr, descr.len, ptr_param_value));
-    if (result)
-    {
-      cb_notify_param_write(descr.addr, descr.len, UAM_NO_USER_SLOT, ID_SYNC_TERMINAL,
-                            co_num, false, const_cast<uint8_t *>(ptr_param_value), true);
-    }
-    notify_param_change(param_cfg_idx, Term_ts_flags::INVALID_TERM_ID, false);
-  }
-  return result;
-}
-
 bool Shared_param::write_param_value(const uint16_t co_num, const uint8_t *ptr_new_param_value) const
 {
-  bool result = false;
-  co_descr_t descr;
+  bool result = true;
+  uint32_t new_data = 0;
 
-  if (get_descr(co_num, descr))
+  if (is_data_new(co_num, ptr_new_param_value))
   {
-    result = true;
-    if (is_data_new(descr, ptr_new_param_value))
-    {
-      result = set_param_value(co_num, descr, ptr_new_param_value);
-    }
+    param_data.set_param_value(param_data.get_param_idx(co_num), co_num, new_data);
   }
   return result;
 }
@@ -398,12 +234,11 @@ bool Shared_param::write_param_value(const uint16_t co_num, const uint8_t *ptr_n
 bool Shared_param::write_param_value(const uint16_t co_num, Shared_buffer& shared_buffer) const
 {
   bool result = false;
-  co_descr_t descr;
   uint32_t ptr_new_data_buff = 0;
 
-  if (get_descr(co_num, descr) && shared_buffer.read_data(reinterpret_cast<uint8_t *>(&ptr_new_data_buff), descr.len))
+  if (shared_buffer.read_data(reinterpret_cast<uint8_t *>(&ptr_new_data_buff), sizeof(uint32_t)))
   {
-    result = set_param_value(co_num, descr, reinterpret_cast<uint8_t *>(&ptr_new_data_buff));
+    param_data.set_param_value(param_data.get_param_idx(co_num), co_num, ptr_new_data_buff);
   }
   return result;
 }

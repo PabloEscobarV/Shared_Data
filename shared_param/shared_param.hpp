@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 20:54:04 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/23 21:13:34 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/24 21:28:42 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include "../p_iterator/p_iterator.hpp"
 #include "../shared_buffer/shared_buffer.hpp"
+#include "../bit/bit.hpp"
 
 #include <stdint.h>
 
@@ -34,30 +35,20 @@ class Shared_param
       uint32_t high_limit;
     };
 
-    static const uint8_t SSRV_INCR_VALUE = 3;
-    static const float32_t FLOAT_PRECISION;
+    static const uint8_t  SSRV_INCR_VALUE = 3;
+    static const float    FLOAT_PRECISION;
 
     uint16_t    counter;
     P_Iterator  iterator;
     uint8_t     err_code;
 
-    bool check_new_value(const uint16_t co_num, const uint8_t *ptr_new_param_val, co_descr_t& descr) const;
-    int16_t cmp_data_correct_type(const uint8_t* ptr_first_data,
-                                const uint8_t* ptr_second_data,
-                                const uint8_t data_type) const;
+    bool check_new_value(const uint16_t co_num, const uint8_t *ptr_new_param_val) const;
     template<typename data_t>
     int16_t cmp_data_with_type(const data_t a, const data_t b) const;
-    bool get_descr(const uint16_t co_num, co_descr_t& descr) const;
-    setpoint_limits_t get_setpoint_limits(const cfg_il3f_descr_par_t& setpoint_description) const;
-    bool is_data_new(const co_descr_t& descr, const uint8_t *ptr_new_param_value) const;
+    bool is_data_new(const uint16_t co_num, const uint8_t *ptr_new_param_value) const;
     bool is_req_update_param_value(const uint16_t iter_synchro, const uint16_t idx, const uint16_t idx_can);
     bool is_param_val_in_range(const uint16_t co_num, const uint8_t *ptr_new_data) const;
     uint32_t read_param_value(const uint16_t param_cfg_idx) const;
-    template <typename data_t>
-    int16_t set_cmp_data(const uint8_t* ptr_first_data, const uint8_t* ptr_second_data) const;
-    bool set_param_value(const uint16_t param_cfg_idx,
-                        const co_descr_t& descr,
-                        const uint8_t *ptr_param_value = nullptr) const;
     bool write_param_value(const uint16_t co_num, const uint8_t *ptr_new_param_value) const;
     bool write_param_value(const uint16_t co_num, Shared_buffer& shared_buffer) const;
     inline bool is_out_of_range_ssv_reset_state() const
@@ -160,18 +151,18 @@ class Shared_param
     inline bool is_new_value_allowed() const { return !Bit::test(err_code, NEW_VAL_REQ_NOT_ALLOWED); }
     inline bool is_synced() const { return Bit::test(err_code, SYNCED); }
 
-    inline bool is_out_of_range_ssv_state(const uint8_t error_code = csl_cmp_int<uint8_t>::NOT_VALID) const
+    inline bool is_out_of_range_ssv_state(const uint8_t error_code = UINT8_MAX) const
     {
-      if (error_code == csl_cmp_int<uint8_t>::NOT_VALID)
+      if (error_code == UINT8_MAX)
       {
         return Bit::test(err_code, OUT_OF_RANGE_SSV);
       }
       return Bit::test(error_code, OUT_OF_RANGE_SSV);
     }
-    
-    inline bool is_out_of_range_ssrv_state(const uint8_t error_code = csl_cmp_int<uint8_t>::NOT_VALID) const
+
+    inline bool is_out_of_range_ssrv_state(const uint8_t error_code = UINT8_MAX) const
     {
-      if (error_code == csl_cmp_int<uint8_t>::NOT_VALID)
+      if (error_code == UINT8_MAX)
       {
         return Bit::test(err_code, OUT_OF_RANGE_SSRV);
       }
@@ -185,6 +176,5 @@ class Shared_param
     }
 
 };
-
 
 #endif // SHARED_PARAM_HPP
