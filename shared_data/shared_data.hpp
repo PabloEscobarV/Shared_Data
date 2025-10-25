@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:05:09 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/24 21:28:06 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/25 01:48:13 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,36 +17,19 @@
 #include "queue/queue.hpp"
 #include "shared_buffer/shared_buffer.hpp"
 
+#include "../hdrs/test.hpp"
+
 class Shared_data
 {
   protected:
-    enum e_message_type
-    {
-      SSV_MESSAGE,
-      SSE_MESSAGE,
-      SSRV_MESSAGE,
-    };
-
-    enum e_ssrv_messages
-    {
-      SSRV_MESSAGE_0 = SSRV_MESSAGE,
-      SSRV_MESSAGE_1,
-      SSRV_MESSAGE_2,
-      SSRV_MESSAGE_3,
-      SSRV_MESSAGE_4,
-      SSRV_MESSAGE_5,
-      SSRV_MESSAGE_6,
-      SSRV_MESSAGE_7,
-    };
 
     enum e_state
     {
-      NO_STATE,
       SSV_MSG_REQUEST,
       SSRV_MSG_REQUEST,
       SSE_MSG_REQUEST,
       SYNCED,
-      IS_CFG_VALID,
+      IS_ERR_STATE
     };
     
     static const uint16_t SSV_ALL_PERIOD = 500;
@@ -68,7 +51,9 @@ class Shared_data
       uint8_t counter;
       uint8_t idx;
 
-      sse_service_t(uint8_t idx_val, uint8_t counter_val) : counter(counter_val), idx(idx_val) {}
+      sse_service_t(uint8_t idx_val = csl_cmp_int<uint16_t>::not_valid(),
+                    uint8_t counter_val = csl_cmp_int<uint8_t>::not_valid())
+                    : counter(counter_val), idx(idx_val) {}
     };
 
 
@@ -96,6 +81,14 @@ class Shared_data
 
       sse_message_t(const uint8_t *ptr_data = nullptr, const uint16_t data_len = 0);
     };
+    
+    bool get_ssv_message(ssv_message_t &message);
+    bool get_ssrv_message(ssrv_message_t &message);
+    bool get_sse_message(sse_message_t& message);
+    bool handle_ssv_message(const ssv_message_t &message, const uint16_t id, const uint16_t id_can);
+    bool handle_ssrv_message(const ssrv_message_t &message);
+    bool handle_sse_message(const sse_message_t& message);
+
   private:
     Shared_param                      shared_params[COUNT];
     Shared_buffer                     shared_buffer;
@@ -110,13 +103,7 @@ class Shared_data
     uint16_t check_ssrv_wait_counter();
     bool  check_ssrv_new_value();
     uint16_t get_all_comm_obj_len(const uint16_t comm_obj_idx = COUNT) const;
-    bool get_ssv_message(ssv_message_t &message);
-    bool get_ssrv_message(ssrv_message_t &message);
-    bool get_sse_message(sse_message_t& message);
     uint8_t get_sync_param_list_idx(const uint16_t p_num) const;
-    bool handle_ssv_message(const ssv_message_t &message, const uint16_t id, const uint16_t id_can);
-    bool handle_ssrv_message(const ssrv_message_t &message);
-    bool handle_sse_message(const sse_message_t& message);
     void ssrv_time_management(const uint16_t ssrv_idx);
     void service_ssv();
     void service_ssrv();
@@ -130,18 +117,17 @@ class Shared_data
     {
       return sync_param_list[sync_param_idx];
     }
-    inline bool is_cfg_valid() const
-    {
-      return Bit::test(state, IS_CFG_VALID);
-    }
     inline void period_counter() { ++tick; }
-  public:
 
+  public:
     Shared_data();
     bool add_ssrv_message(const uint16_t param_num, const uint8_t *new_param_val);
-    void initialize(cmsis::Cmsis_thread *thread_ptr, const uint8_t cu_can_address, const uint32_t event_mask);
+    void init();
     void service();
     inline bool is_synced() const { return Bit::test(state, SYNCED); }
+    inline bool is_ssv_msg_request() const { return Bit::test(state, SSV_MSG_REQUEST); }
+    inline bool is_ssrv_msg_request() const { return Bit::test(state, SSRV_MSG_REQUEST); }
+    inline bool is_sse_msg_request() const { return Bit::test(state, SSE_MSG_REQUEST); }
  };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:11:03 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/24 21:28:12 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/25 02:01:31 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,18 +17,6 @@
 
 #include <stdint.h>
 #include <string.h>
-
-  const uint16_t Shared_data::SSRV_MSG_FLAGS[Shared_data::PACK_SIZE] =
-  {
-    1 << Shared_data::SSRV_MESSAGE_0,
-    1 << Shared_data::SSRV_MESSAGE_1,
-    1 << Shared_data::SSRV_MESSAGE_2,
-    1 << Shared_data::SSRV_MESSAGE_3,
-    1 << Shared_data::SSRV_MESSAGE_4,
-    1 << Shared_data::SSRV_MESSAGE_5,
-    1 << Shared_data::SSRV_MESSAGE_6,
-    1 << Shared_data::SSRV_MESSAGE_7
-  };
 
 
 Shared_data::ssv_message_t::ssv_message_t(const uint8_t *ptr_data, const uint16_t data_len)
@@ -66,94 +54,11 @@ Shared_data::sse_message_t::sse_message_t(const uint8_t *ptr_data, const uint16_
   }
 }
 
-Shared_data::can_data_t::can_data_t()
-{
-  memset(data, 0, sizeof(data));
-  memset(messages_size, 0, sizeof(messages_size));
-  data_len = 0;
-  idx_can = 0;
-  message_type_flags = 0;
-}
-
-Shared_data::can_data_t::can_data_t(const uint8_t *ptr_data,
-                                    const uint8_t data_size,
-                                    const uint16_t id_cu_received,
-                                    const uint16_t message_flags)
-  : data_len(data_size),
-    idx_can(id_cu_received),
-    message_type_flags(message_flags)
-{
-  memset(messages_size, 0, sizeof(messages_size));
-  memset(data, 0, sizeof(data));
-  if (ptr_data != nullptr)
-  {
-    memcpy(data, ptr_data, data_len);
-  }
-  else
-  {
-    data_len = 0;
-  }
-}
-
-Shared_data::can_data_t::can_data_t(const uint8_t *ptr_data,
-                                    const uint8_t (&msgs_size)[MAX_FLAGS_COUNT],
-                                    const uint8_t data_size,
-                                    const uint16_t id_cu_received,
-                                    const uint16_t message_flags)
-  : data_len(data_size),
-    idx_can(id_cu_received),
-    message_type_flags(message_flags)
-{
-  memcpy(messages_size, msgs_size, sizeof(msgs_size));
-  memset(data, 0, sizeof(data));
-  if (ptr_data != nullptr)
-  {
-    memcpy(data, ptr_data, data_len);
-  }
-  else
-  {
-    data_len = 0;
-  }
-}
-
-template <typename data_t>
-bool Shared_data::can_data_t::add_data(const data_t& data_obj,
-                                      const uint16_t msg_type,
-                                      const uint16_t msg_flag)
-{
-  bool result = false;
-
-  if (((message_type_flags & msg_flag) == 0) && (msg_type < MAX_FLAGS_COUNT))
-  {
-    memcpy(data + data_len, &data_obj, sizeof(data_t));
-    data_len += sizeof(data_t);
-    messages_size[msg_type] = sizeof(data_t);
-    message_type_flags |= msg_flag;
-    result = true;
-  }
-  return result;
-}
-
-template <typename data_t>
-data_t Shared_data::can_data_t::get_data()
-{
-  data_t result;
-
-  if (offset < data_len)
-  {
-    memcpy(&result, data + offset, sizeof(data_t));
-    offset += sizeof(data_t);
-  }
-  return result;
-}
 
 Shared_data::Shared_data()
-  : shared_data_event(0),
-    ptr_thread(nullptr),
-    idx_ssv(0),
+  : idx_ssv(0),
     idx_ssv_new(csl_cmp_int<uint16_t>::not_valid()),
     tick(0),
-    cu_id(csl_cmp_int<uint16_t>::not_valid()),
     state(0)
 {
 
@@ -181,16 +86,9 @@ bool  Shared_data::add_ssrv_message(const uint16_t param_num, const uint8_t *ptr
   return result;
 }
 
-void Shared_data::initialize(cmsis::Cmsis_thread *thread_ptr, const uint8_t cu_can_address, const uint32_t event_mask)
+void Shared_data::init()
 {
-  ptr_thread = thread_ptr;
-  cu_id = cu_can_address;
-  shared_data_event = event_mask;
   shared_buffer.init(get_all_comm_obj_len());
-  if (cfg_valid())
-  {
-    Bit::set(state, IS_CFG_VALID);
-  }
 }
 
 void Shared_data::service()
@@ -205,16 +103,11 @@ void Shared_data::service()
   set_msg_request();
 }
 
-bool Shared_data::sync_param_are_synced()
-{
-  return Bit::test(state, SYNCED);
-}
-
 bool  Shared_data::check_counter_ssv() const
 {
   bool  result = true;
 
-  if ((idx_ssv_new == csl_cmp_int<uint16_t>::not_valid();) && (tick > MIN_ACT_TICK))
+  if ((idx_ssv_new == csl_cmp_int<uint16_t>::not_valid()) && (tick > MIN_ACT_TICK))
   {
     if ((idx_ssv == 0) && (tick % SSV_ALL_PERIOD != 0))
     {
@@ -258,24 +151,14 @@ bool Shared_data::check_ssrv_new_value()
 
 uint16_t Shared_data::get_all_comm_obj_len(const uint16_t comm_obj_idx) const
 {
-  uint16_t total_length = 0;
-  co_descr_t descr;
-
-  for (uint16_t i = 0; i < COUNT && i < comm_obj_idx; ++i)
-  {
-    if ((app_comm_obj_get_descr(get_param_co_num(i), &descr) == CO_DEF) && (descr.type == CO_SPAR))
-    {
-      total_length += descr.len;
-    }
-  }
-  return total_length;
+  return sizeof(uint16_t) * NUM_SYNC_PARAM;
 }
 
 bool  Shared_data::get_ssv_message(ssv_message_t &message)
 {
   bool result = false;
 
-  if (idx_ssv_new == csl_cmp_int<uint16_t>::not_valid();)
+  if (idx_ssv_new == csl_cmp_int<uint16_t>::not_valid())
   {
     result = write_ssv_data(idx_ssv, message);
     idx_ssv = static_cast<uint16_t>((idx_ssv + 1) % COUNT);
@@ -285,6 +168,7 @@ bool  Shared_data::get_ssv_message(ssv_message_t &message)
     result = write_ssv_data(idx_ssv_new, message);
     idx_ssv_new = csl_cmp_int<uint16_t>::not_valid();
   }
+  Bit::clear(state, SSV_MSG_REQUEST);
   return result;
 }
 
@@ -301,6 +185,7 @@ bool  Shared_data::get_ssrv_message(ssrv_message_t &message)
                                                     shared_buffer,
                                                     message.param_val);
     ssrv_time_management(ssrv_idx);
+    Bit::clear(state, SSRV_MSG_REQUEST);
   }
   return result;
 }
@@ -308,9 +193,9 @@ bool  Shared_data::get_ssrv_message(ssrv_message_t &message)
 bool  Shared_data::get_sse_message(sse_message_t &message)
 {
   sse_service_t  sse_service;
-  const bool  result = sse_queue.pop(sse_service);
+  const bool  result = sse_queue.pop(sse_service) && (sse_service.idx < COUNT);
 
-  if (result && (sse_service.idx < COUNT))
+  if (result)
   {
     message.param_num = get_param_co_num(sse_service.idx);
     message.error_code = shared_params[sse_service.idx].get_error_code();
@@ -318,6 +203,7 @@ bool  Shared_data::get_sse_message(sse_message_t &message)
     {
       sse_queue.push(sse_service, PACK_SIZE - 1);
     }
+    Bit::clear(state, SSE_MSG_REQUEST);
   }
   return result;
 }
@@ -381,7 +267,6 @@ bool  Shared_data::handle_ssrv_message(const ssrv_message_t &message)
     if (!result)
     {
       result = sse_queue.push(sse_service);
-      ptr_thread->set_signal(shared_data_event);
       Bit::set(state, SSE_MSG_REQUEST);
     }
   }
@@ -419,7 +304,7 @@ void Shared_data::ssrv_time_management(const uint16_t ssrv_idx)
 
 void Shared_data::service_ssv()
 {
-  if (Bit::test(state, SYNCED))
+  if (Bit::test(state, SYNCED) && check_counter_ssv())
   {
     if (check_ssrv_new_value() || ((tick != 0) && (tick % Shared_data::SSV_PERIOD == 0)))
     {
@@ -467,15 +352,7 @@ void Shared_data::service_wrn_state()
       break;
     }
   }
-  states_serve_err_now(is_err, false, idx_s_CommobjOutOfRange, lvls_s_CommobjOutOfRange);
-}
-
-void Shared_data::set_msg_request()
-{
-  if (Bit::test(state, SSV_MSG_REQUEST) || Bit::test(state, SSRV_MSG_REQUEST) || Bit::test(state, SSE_MSG_REQUEST))
-  {
-    ptr_thread->set_signal(shared_data_event);
-  }
+  Bit::set(state, IS_ERR_STATE);
 }
 
 void Shared_data::service_sync_state()
