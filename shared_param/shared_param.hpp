@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 20:54:04 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/26 13:38:01 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/26 13:59:03 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ class Shared_param
 
     uint16_t    counter;
     P_Iterator  iterator;
-    uint8_t     err_code;
+    uint8_t     state;
 
     bool accept_new_value(const uint16_t co_num, Shared_buffer& shared_buffer);
     bool check_new_value(const uint16_t co_num, const uint8_t *ptr_new_param_val) const;
@@ -57,7 +57,7 @@ class Shared_param
     bool write_param_value(const uint16_t co_num, Shared_buffer& shared_buffer) const;
     inline bool is_out_of_range_ssv_reset_state() const
     {
-      return Bit::test(err_code, OUT_OF_RANGE_SSV_RESET);
+      return Bit::test(state, OUT_OF_RANGE_SSV_RESET);
     }
     inline void update_iterator()
     {
@@ -65,51 +65,51 @@ class Shared_param
     }
     inline void set_new_value_not_allowed_state()
     {
-      Bit::set(err_code, NEW_VAL_REQ_NOT_ALLOWED);
+      Bit::set(state, NEW_VAL_REQ_NOT_ALLOWED);
     }
     inline void reset_new_value_not_allowed_state()
     {
-      Bit::clear(err_code, NEW_VAL_REQ_NOT_ALLOWED);
+      Bit::clear(state, NEW_VAL_REQ_NOT_ALLOWED);
     }
     inline void set_out_of_range_ssv_state()
     {
-      Bit::set(err_code, OUT_OF_RANGE_SSV);
+      Bit::set(state, OUT_OF_RANGE_SSV);
     }
     inline void set_out_of_range_ssv_reset_state()
     {
-      Bit::set(err_code, OUT_OF_RANGE_SSV_RESET);
+      Bit::set(state, OUT_OF_RANGE_SSV_RESET);
     }
     inline void reset_out_of_range_ssv_state()
     {
-      Bit::clear(err_code, OUT_OF_RANGE_SSV);
+      Bit::clear(state, OUT_OF_RANGE_SSV);
     }
     inline void reset_out_of_range_ssv_reset_state()
     {
-      Bit::clear(err_code, OUT_OF_RANGE_SSV_RESET);
+      Bit::clear(state, OUT_OF_RANGE_SSV_RESET);
     }
     inline void set_out_of_range_ssrv_state()
     {
-      Bit::set(err_code, OUT_OF_RANGE_SSRV);
+      Bit::set(state, OUT_OF_RANGE_SSRV);
     }
     inline void reset_out_of_range_ssrv_state()
     {
-      Bit::clear(err_code, OUT_OF_RANGE_SSRV);
+      Bit::clear(state, OUT_OF_RANGE_SSRV);
     }
     inline void set_new_val_send_state()
     {
-      Bit::set(err_code, NEW_VAL_SEND_STATE);
+      Bit::set(state, NEW_VAL_SEND_STATE);
     }
     inline void reset_new_val_send_state()
     {
-      Bit::clear(err_code, NEW_VAL_SEND_STATE);
+      Bit::clear(state, NEW_VAL_SEND_STATE);
     }
     inline void set_new_val_wait_state()
     {
-      Bit::set(err_code, NEW_VAL_WAIT_STATE);
+      Bit::set(state, NEW_VAL_WAIT_STATE);
     }
     inline void reset_new_val_wait_state()
     {
-      Bit::clear(err_code, NEW_VAL_WAIT_STATE);
+      Bit::clear(state, NEW_VAL_WAIT_STATE);
     }
   public:
 
@@ -148,19 +148,19 @@ class Shared_param
                 const uint16_t check_flags_period);
     inline void decr_counter() { --counter; }
     inline uint16_t get_counter() const { return counter; }
-    inline uint8_t get_error_code() const { return err_code; }
+    inline uint8_t get_error_code() const { return state; }
     inline uint16_t get_iterator() const { return iterator.get_iterator(); }
     inline void incr_counter() { ++counter; }
-    inline bool is_new_val_wait_state() const { return Bit::test(err_code, NEW_VAL_WAIT_STATE); }
-    inline bool is_new_val_send_state() const { return Bit::test(err_code, NEW_VAL_SEND_STATE); }
-    inline bool is_new_value_allowed() const { return !Bit::test(err_code, NEW_VAL_REQ_NOT_ALLOWED); }
-    inline bool is_synced() const { return Bit::test(err_code, SYNCED); }
-    inline bool is_new_value_accepted() const { return Bit::test(err_code, ACCEPTED_NEW_VALUE); }
+    inline bool is_new_val_wait_state() const { return Bit::test(state, NEW_VAL_WAIT_STATE); }
+    inline bool is_new_val_send_state() const { return Bit::test(state, NEW_VAL_SEND_STATE); }
+    inline bool is_new_value_allowed() const { return !Bit::test(state, NEW_VAL_REQ_NOT_ALLOWED); }
+    inline bool is_synced() const { return Bit::test(state, SYNCED); }
+    inline bool is_new_value_accepted() const { return Bit::test(state, ACCEPTED_NEW_VALUE); }
     inline bool is_out_of_range_ssv_state(const uint8_t error_code = UINT8_MAX) const
     {
       if (error_code == UINT8_MAX)
       {
-        return Bit::test(err_code, OUT_OF_RANGE_SSV);
+        return Bit::test(state, OUT_OF_RANGE_SSV);
       }
       return Bit::test(error_code, OUT_OF_RANGE_SSV);
     }
@@ -169,7 +169,7 @@ class Shared_param
     {
       if (error_code == UINT8_MAX)
       {
-        return Bit::test(err_code, OUT_OF_RANGE_SSRV);
+        return Bit::test(state, OUT_OF_RANGE_SSRV);
       }
       return Bit::test(error_code, OUT_OF_RANGE_SSRV);
     }
