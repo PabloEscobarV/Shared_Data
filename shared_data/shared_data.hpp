@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:05:09 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/25 01:48:13 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/26 13:46:25 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ class Shared_data
     static const uint8_t  SSRV_PERIOD = 2;
     static const uint8_t  SSE_PERIOD = 5;
     static const uint8_t  SSRV_ATTEMPTS = 3;
-    static const uint8_t  SSRV_WAIT_TICKS = 25;
     static const uint8_t  TICK = 20;
     static const uint8_t  PACK_SIZE = 8;
     static const uint8_t  MIN_ACT_TICK = TICK * SSV_PERIOD;
@@ -100,8 +99,6 @@ class Shared_data
     uint8_t                           state;
 
     bool  check_counter_ssv() const;
-    uint16_t check_ssrv_wait_counter();
-    bool  check_ssrv_new_value();
     uint16_t get_all_comm_obj_len(const uint16_t comm_obj_idx = COUNT) const;
     uint8_t get_sync_param_list_idx(const uint16_t p_num) const;
     void ssrv_time_management(const uint16_t ssrv_idx);
@@ -112,7 +109,6 @@ class Shared_data
     void service_wrn_state();
     void set_msg_request();
     void service_sync_state();
-    bool  write_ssv_data(const uint16_t idx, ssv_message_t &message);
     inline uint16_t get_param_co_num(const uint16_t sync_param_idx) const
     {
       return sync_param_list[sync_param_idx];
@@ -122,7 +118,7 @@ class Shared_data
   public:
     Shared_data();
     bool add_ssrv_message(const uint16_t param_num, const uint8_t *new_param_val);
-    void init();
+    void initialize();
     void service();
     inline bool is_synced() const { return Bit::test(state, SYNCED); }
     inline bool is_ssv_msg_request() const { return Bit::test(state, SSV_MSG_REQUEST); }

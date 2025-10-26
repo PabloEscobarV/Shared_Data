@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 21:25:06 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/25 02:44:38 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/26 13:05:15 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,11 +124,12 @@ data_t Can_shared_data::can_data_t::get_data(const uint16_t msg_type, const uint
 }
 
 
-void Can_shared_data::init(const uint16_t cu_id, int event_fd)
+void Can_shared_data::initialize(const uint16_t cu_id, int event_fd)
 {
   can_cu_id = cu_id;
   event = event_fd;
   Bit::set(state, IS_CFG_VALID);
+  Shared_data::initialize();
 }
 
 bool Can_shared_data::get_message(Can_app_message& can_app_message)

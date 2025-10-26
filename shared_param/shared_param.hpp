@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 20:54:04 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/24 21:28:42 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/26 13:38:01 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,20 +35,24 @@ class Shared_param
       uint32_t high_limit;
     };
 
-    static const uint8_t  SSRV_INCR_VALUE = 3;
     static const float    FLOAT_PRECISION;
+    static const uint8_t  SSRV_INCR_VALUE = 3;
+    static const uint8_t  MAX_WAIT_TICKS = 25;
 
     uint16_t    counter;
     P_Iterator  iterator;
     uint8_t     err_code;
 
+    bool accept_new_value(const uint16_t co_num, Shared_buffer& shared_buffer);
     bool check_new_value(const uint16_t co_num, const uint8_t *ptr_new_param_val) const;
+    bool Shared_param::check_wait_counter(const uint16_t current_tick) const;
     template<typename data_t>
     int16_t cmp_data_with_type(const data_t a, const data_t b) const;
     bool is_data_new(const uint16_t co_num, const uint8_t *ptr_new_param_value) const;
     bool is_req_update_param_value(const uint16_t iter_synchro, const uint16_t idx, const uint16_t idx_can);
     bool is_param_val_in_range(const uint16_t co_num, const uint8_t *ptr_new_data) const;
-    uint32_t read_param_value(const uint16_t param_cfg_idx) const;
+    void service_flags();
+    void service_new_value(const uint16_t co_num, const uint16_t current_tick, Shared_buffer& shared_buffer);
     bool write_param_value(const uint16_t co_num, const uint8_t *ptr_new_param_value) const;
     bool write_param_value(const uint16_t co_num, Shared_buffer& shared_buffer) const;
     inline bool is_out_of_range_ssv_reset_state() const
@@ -111,13 +115,13 @@ class Shared_param
 
     enum e_errorcode
     {
-      NO_ERROR,
       OUT_OF_RANGE_SSV,
       OUT_OF_RANGE_SSV_RESET,
       OUT_OF_RANGE_SSRV,
       NEW_VAL_REQ_NOT_ALLOWED,
       NEW_VAL_SEND_STATE,
       NEW_VAL_WAIT_STATE,
+      ACCEPTED_NEW_VALUE,
       SYNCED
     };
 
@@ -125,7 +129,6 @@ class Shared_param
 
     Shared_param();
 
-    bool accept_new_value(const uint16_t co_num, Shared_buffer& shared_buffer);
     bool add_new_value(const uint16_t co_num, Shared_buffer& shared_buffer, const uint8_t *ptr_new_param_val);
     bool get_new_value(const uint16_t co_num, Shared_buffer& shared_buffer, uint8_t *ptr_data) const;
     bool get_param_value(const uint16_t co_num, uint8_t* dest) const;
@@ -139,8 +142,10 @@ class Shared_param
     void reset_counter();
     void set_send_counter(const uint16_t cnt);
     void set_wait_time_stamp(const uint16_t time_stmp);
-    void service();
-
+    void service(const uint16_t co_num,
+                Shared_buffer& shared_buffer,
+                const uint16_t current_tick,
+                const uint16_t check_flags_period);
     inline void decr_counter() { --counter; }
     inline uint16_t get_counter() const { return counter; }
     inline uint8_t get_error_code() const { return err_code; }
@@ -150,7 +155,7 @@ class Shared_param
     inline bool is_new_val_send_state() const { return Bit::test(err_code, NEW_VAL_SEND_STATE); }
     inline bool is_new_value_allowed() const { return !Bit::test(err_code, NEW_VAL_REQ_NOT_ALLOWED); }
     inline bool is_synced() const { return Bit::test(err_code, SYNCED); }
-
+    inline bool is_new_value_accepted() const { return Bit::test(err_code, ACCEPTED_NEW_VALUE); }
     inline bool is_out_of_range_ssv_state(const uint8_t error_code = UINT8_MAX) const
     {
       if (error_code == UINT8_MAX)

@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 20:45:22 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/24 21:28:32 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/26 13:14:19 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ class  P_Iterator
     template<typename outdata_t, typename indata_t>
     static inline outdata_t get_simply_diff(const indata_t primary, const indata_t secondary)
     {
-      return static_cast<outdata_t>(static_cast<int64_t>(primary - secondary));
+      return static_cast<outdata_t>(static_cast<int32_t>(primary - secondary));
     }
     inline void set_iterator(const uint8_t i)
     {

@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:28:21 by blackrider        #+#    #+#             */
-/*   Updated: 2025/10/25 02:25:37 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/26 13:13:35 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ struct heartbeat_t
 struct signal_state_t
 {
 	bool is_msg_requested;
-}
+};
 
 uint16_t sync_param_list[NUM_SYNC_PARAM];
 
