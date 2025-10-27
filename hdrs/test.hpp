@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:28:21 by blackrider        #+#    #+#             */
-/*   Updated: 2025/10/26 13:13:35 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 03:36:16 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,14 @@
 #include <sys/socket.h>    // Basic socket functions
 #include <netinet/in.h>    // sockaddr_in structure
 #include <arpa/inet.h>     // inet_addr(), inet_ntoa(), etc.
+#include <semaphore.h>    // POSIX semaphores
 
-#define P_COUNT 64
-#define NUM_SYNC_PARAM 64
+#define P_COUNT 100
+#define NUM_SYNC_PARAM P_COUNT
 
 using namespace std;
+
+constexpr const char* SEM_NAME = "/sem_output_ctrl";
 
 struct	udp_data_t
 {
@@ -57,10 +60,11 @@ struct signal_state_t
 	bool is_msg_requested;
 };
 
-uint16_t sync_param_list[NUM_SYNC_PARAM];
+extern uint16_t sync_param_list[NUM_SYNC_PARAM];
 
 uint16_t	get_pid();
-void	run_app(uint16_t pid, uint16_t iterator_start_value, uint16_t param_kef);
+void run_app(uint16_t pid, uint16_t param_kef);
+void print_param_data();
 // void	start_test(uint16_t pid, uint16_t iterator_start_value, uint16_t param_kef);
 
 #endif // TEST_HPP

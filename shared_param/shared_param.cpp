@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:02:52 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/26 13:58:00 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 03:36:15 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,15 @@
 
 #include <cstdint>
 #include <cstring>
+#include <iostream>
+
+using namespace std;
 
 const float Shared_param::FLOAT_PRECISION = 0.00001f;
 
 Shared_param::Shared_param() : state(0)
 {
-
+  
 }
 
 bool Shared_param::accept_new_value(const uint16_t co_num, Shared_buffer& shared_buffer)
@@ -44,8 +47,9 @@ bool Shared_param::check_wait_counter(const uint16_t current_tick) const
 {
   if (is_new_val_wait_state())
   {
-    P_Iterator::get_simply_diff<int16_t, uint16_t>(current_tick, counter) >= MAX_WAIT_TICKS;
+    return P_Iterator::get_simply_diff<int16_t, uint16_t>(current_tick, counter) >= MAX_WAIT_TICKS;
   }
+  return false;
 }
 
 bool Shared_param::add_new_value(const uint16_t co_num, Shared_buffer& shared_buffer, const uint8_t *ptr_new_param_val)
@@ -65,7 +69,7 @@ bool Shared_param::add_new_value(const uint16_t co_num, Shared_buffer& shared_bu
 bool Shared_param::get_new_value(const uint16_t co_num, Shared_buffer& shared_buffer, uint8_t *ptr_data) const
 {
   bool result = false;
-  int param_len = param_data.get_param_value(co_num);
+  int param_len = sizeof(uint32_t);
 
   if (ptr_data)
   {
@@ -76,12 +80,13 @@ bool Shared_param::get_new_value(const uint16_t co_num, Shared_buffer& shared_bu
 
 bool Shared_param::get_param_value(const uint16_t co_num, uint8_t *ptr_dest) const
 {
-  uint32_t value = param_data.get_param_value(co_num);
+  uint32_t value = param_data->get_param_value(param_data->get_param_idx(co_num));
   
   if (value == ParamData::invalid_param_value())
   {
     return false;
   }
+  memcpy(ptr_dest, &value, sizeof(uint32_t));
   return true;
 }
 
@@ -93,6 +98,7 @@ bool Shared_param::handle_ssv_value(const uint16_t co_num,
 {
   bool result = ptr_param_val && is_param_val_in_range(co_num, ptr_param_val);
 
+  // cout << "Handling SSV Shared Param Value..."  << "IN RANGE: " << (result ? "YES" : "NO") << endl;
   if (result)
   {
     Bit::set(state, SYNCED);
@@ -187,7 +193,11 @@ bool Shared_param::is_data_new(const uint16_t co_num, const uint8_t *ptr_new_par
 
   if (ptr_new_param_value)
   {
-    result = (new_value != param_data.get_param_value(param_data.get_param_idx(co_num)));
+    memcpy(&new_value, ptr_new_param_value, sizeof(uint32_t));
+    result = (new_value != param_data->get_param_value(param_data->get_param_idx(co_num)));
+    // cout << "New Value: " << new_value << " | Current Value: "
+    //      << param_data->get_param_value(param_data->get_param_idx(co_num)) 
+    //      << " | Is Data New: " << result << endl;
   }
   return result;
 }
@@ -220,8 +230,8 @@ bool Shared_param::is_param_val_in_range(const uint16_t co_num, const uint8_t *p
   if (ptr_new_data != nullptr)
   {
     (void)memcpy(&new_value, ptr_new_data, sizeof(uint32_t));
-    in_range = new_value >= param_data.get_param_min_value(co_num)
-               && new_value <= param_data.get_param_max_value(co_num);
+    in_range = new_value >= param_data->get_param_min_value(co_num)
+               && new_value <= param_data->get_param_max_value(co_num);
   }
   return in_range;
 }
@@ -244,7 +254,7 @@ void Shared_param::service_new_value(const uint16_t co_num, const uint16_t curre
 {
   if (check_wait_counter(current_tick))
   {
-    accept_new_value(param_data.get_param_num(counter), shared_buffer);
+    accept_new_value(param_data->get_param_num(counter), shared_buffer);
   }
   else
   {
@@ -260,9 +270,11 @@ bool Shared_param::write_param_value(const uint16_t co_num, const uint8_t *ptr_n
   bool result = true;
   uint32_t new_data = 0;
 
+  // cout << "Writing new param value..." << endl;
   if (is_data_new(co_num, ptr_new_param_value))
   {
-    param_data.set_param_value(param_data.get_param_idx(co_num), co_num, new_data);
+    memcpy(&new_data, ptr_new_param_value, sizeof(uint32_t));
+    param_data->set_param_value(param_data->get_param_idx(co_num), co_num, new_data);
   }
   return result;
 }
@@ -272,9 +284,11 @@ bool Shared_param::write_param_value(const uint16_t co_num, Shared_buffer& share
   bool result = false;
   uint32_t ptr_new_data_buff = 0;
 
+  // cout << "Writing new param value 1..." << endl;
   if (shared_buffer.read_data(reinterpret_cast<uint8_t *>(&ptr_new_data_buff), sizeof(uint32_t)))
   {
-    param_data.set_param_value(param_data.get_param_idx(co_num), co_num, ptr_new_data_buff);
+    if (is_data_new(co_num, reinterpret_cast<uint8_t *>(&ptr_new_data_buff)))
+      param_data->set_param_value(param_data->get_param_idx(co_num), co_num, ptr_new_data_buff);
   }
   return result;
 }

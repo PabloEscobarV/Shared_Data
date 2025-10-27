@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:11:03 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/26 13:56:50 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 03:36:13 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,9 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <iostream>
 
+using namespace std;
 
 Shared_data::ssv_message_t::ssv_message_t(const uint8_t *ptr_data, const uint16_t data_len)
   : iterator(0),
@@ -86,9 +88,10 @@ bool  Shared_data::add_ssrv_message(const uint16_t param_num, const uint8_t *ptr
   return result;
 }
 
-void Shared_data::initialize()
+void Shared_data::initialize(const uint8_t ssv_pack_size)
 {
   shared_buffer.init(get_all_comm_obj_len());
+  all_param_ticks = SSV_ALL_PERIOD / ssv_pack_size;
 }
 
 void Shared_data::service()
@@ -100,16 +103,15 @@ void Shared_data::service()
   service_sse();
   service_shared_param();
   service_wrn_state();
-  set_msg_request();
 }
 
 bool  Shared_data::check_counter_ssv() const
 {
   bool  result = true;
 
-  if ((idx_ssv_new == csl_cmp_int<uint16_t>::not_valid()) && (tick > MIN_ACT_TICK))
+  if (Bit::test(state, SYNCED))
   {
-    if ((idx_ssv == 0) && (tick % SSV_ALL_PERIOD != 0))
+    if ((idx_ssv == 0) && ((tick % all_param_ticks) != 0))
     {
       result = false;
     }
@@ -119,30 +121,33 @@ bool  Shared_data::check_counter_ssv() const
 
 uint16_t Shared_data::get_all_comm_obj_len(const uint16_t comm_obj_idx) const
 {
-  return sizeof(uint16_t) * NUM_SYNC_PARAM;
+  return sizeof(uint32_t) * NUM_SYNC_PARAM;
 }
 
-bool  Shared_data::get_ssv_message(ssv_message_t &message)
+bool  Shared_data::get_ssv_message(ssv_message_t &message, const uint16_t msg_number)
 {
   bool result = false;
 
-  if (idx_ssv < COUNT)
+  if (idx_ssv < COUNT && Bit::test(state, SSV_MSG_REQUEST))
   {
     message.iterator = shared_params[idx_ssv].send_iterator();
     message.param_num = get_param_co_num(idx_ssv);
     result = shared_params[idx_ssv].get_param_value(get_param_co_num(idx_ssv), message.param_val);
     idx_ssv = static_cast<uint16_t>((idx_ssv + 1) % COUNT);
-    Bit::clear(state, SSV_MSG_REQUEST);
+    if ((msg_number == 0) || (idx_ssv == 0))
+    {
+      Bit::clear(state, SSV_MSG_REQUEST);
+    }
   }
   return result;
 }
 
-bool  Shared_data::get_ssrv_message(ssrv_message_t &message)
+bool  Shared_data::get_ssrv_message(ssrv_message_t &message, const uint16_t msg_number)
 {
   uint8_t ssrv_idx;
   bool result = ssrv_queue.peek(ssrv_idx) && (ssrv_idx < COUNT);
 
-  if (result)
+  if (result && Bit::test(state, SSRV_MSG_REQUEST))
   {
     message.param_num = get_param_co_num(ssrv_idx);
     result = shared_buffer.set_offset(get_all_comm_obj_len(ssrv_idx))
@@ -150,17 +155,20 @@ bool  Shared_data::get_ssrv_message(ssrv_message_t &message)
                                                     shared_buffer,
                                                     message.param_val);
     ssrv_time_management(ssrv_idx);
-    Bit::clear(state, SSRV_MSG_REQUEST);
+    if ((msg_number == 0) || ssrv_queue.is_empty())
+    {
+      Bit::clear(state, SSRV_MSG_REQUEST);
+    }
   }
   return result;
 }
 
-bool  Shared_data::get_sse_message(sse_message_t &message)
+bool  Shared_data::get_sse_message(sse_message_t &message, const uint16_t msg_number)
 {
   sse_service_t  sse_service;
   const bool  result = sse_queue.pop(sse_service) && (sse_service.idx < COUNT);
 
-  if (result)
+  if (result && Bit::test(state, SSE_MSG_REQUEST))
   {
     message.param_num = get_param_co_num(sse_service.idx);
     message.error_code = shared_params[sse_service.idx].get_error_code();
@@ -168,7 +176,10 @@ bool  Shared_data::get_sse_message(sse_message_t &message)
     {
       sse_queue.push(sse_service, PACK_SIZE - 1);
     }
-    Bit::clear(state, SSE_MSG_REQUEST);
+    if ((msg_number == 0) || sse_queue.is_empty())
+    {
+      Bit::clear(state, SSE_MSG_REQUEST);
+    }
   }
   return result;
 }
@@ -211,6 +222,11 @@ bool  Shared_data::handle_ssv_message(const ssv_message_t &message,
 
   if (sse_service.idx < COUNT)
   {
+    uint32_t tmp = 0;
+    memcpy(&tmp, message.param_val, sizeof(tmp));
+    // cout << "Received SSV Message for Param Num: " << message.param_num
+    //      << " with Iterator: " << message.iterator
+    //      << " and Value: " << tmp << endl;
     result = shared_params[sse_service.idx].handle_ssv_value(
               get_param_co_num(sse_service.idx), message.param_val, message.iterator, id, id_can);
     if (!result)
@@ -228,6 +244,8 @@ bool  Shared_data::handle_ssrv_message(const ssrv_message_t &message)
 
   if (sse_service.idx < COUNT)
   {
+    uint32_t tmp = 0;
+    memcpy(&tmp, message.param_val, sizeof(tmp));
     result = shared_params[sse_service.idx].handle_ssrv_value(get_param_co_num(sse_service.idx), message.param_val);
     if (!result)
     {
@@ -269,7 +287,7 @@ void Shared_data::ssrv_time_management(const uint16_t ssrv_idx)
 
 void Shared_data::service_ssv()
 {
-  if (Bit::test(state, SYNCED) && check_counter_ssv())
+  if (check_counter_ssv())
   {
     if (((tick != 0) && (tick % Shared_data::SSV_PERIOD == 0)))
     {

@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 21:25:06 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/26 13:05:15 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 03:36:12 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,14 @@
 #include <string.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
+#include <iostream>
+#include <mutex>
 
-  const uint8_t Can_shared_data::MSG_FLAGS[Can_shared_data::MAX_FLAGS_COUNT] =
+using namespace std;
+
+mutex 		mtx_shared_data;
+
+  const uint16_t Can_shared_data::MSG_FLAGS[Can_shared_data::MAX_FLAGS_COUNT] =
   {
     1 << Can_shared_data::SSV_MESSAGE_0,
     1 << Can_shared_data::SSV_MESSAGE_1,
@@ -107,29 +113,33 @@ bool Can_shared_data::can_data_t::add_data(const data_t& data_obj,
 }
 
 template <typename data_t>
-data_t Can_shared_data::can_data_t::get_data(const uint16_t msg_type, const uint16_t msg_flag)
+bool Can_shared_data::can_data_t::get_data(const uint16_t msg_type, data_t& dest)
 {
-  data_t result;
+  bool result = false;
 
-  if (Bit::test(message_type_flags, msg_flag) && (messages_size[msg_type] == sizeof(data_t)))
+  if (Bit::test(message_type_flags, msg_type) && offset + sizeof(data_t) <= data_len)
   {
-    offset = 0;
-    for (uint16_t i = 0; i < msg_type; ++i)
-    {
-      offset += messages_size[i];
-    }
+    memcpy(&dest, data + offset, sizeof(data_t));
+    offset += sizeof(data_t);
+    result = true;
   }
-  memcpy(&result, data + offset, sizeof(data_t));
   return result;
 }
 
+Can_shared_data::Can_shared_data()
+  : can_cu_id(0),
+    state(0),
+    event(-1)
+{
+
+}
 
 void Can_shared_data::initialize(const uint16_t cu_id, int event_fd)
 {
   can_cu_id = cu_id;
   event = event_fd;
   Bit::set(state, IS_CFG_VALID);
-  Shared_data::initialize();
+  Shared_data::initialize(SSV_MESSAGE_MAX_COUNT);
 }
 
 bool Can_shared_data::get_message(Can_app_message& can_app_message)
@@ -156,6 +166,7 @@ bool  Can_shared_data::get_messages(can_data_t &can_data)
 {
   bool  result = false;
 
+  mtx_shared_data.lock();
   if (is_ssv_msg_request())
   {
     result = get_ssv_msg_data(can_data);
@@ -168,12 +179,14 @@ bool  Can_shared_data::get_messages(can_data_t &can_data)
   {
     result &= get_ssrv_msg_data(can_data);
   }
+  mtx_shared_data.unlock();
   return result;
 }
 
 bool Can_shared_data::process_message(const Can_app_message& can_app_message)
 {
   bool result = false;
+  mtx_shared_data.lock();
   can_data_t can_data(can_app_message.get_data_pointer(),
                       can_app_message.get_data_len(),
                       can_app_message.get_source_controller_id(),
@@ -183,6 +196,7 @@ bool Can_shared_data::process_message(const Can_app_message& can_app_message)
   {
     result = handle_messages(can_data);
   }
+  mtx_shared_data.unlock();
   return result;
 }
 
@@ -190,13 +204,19 @@ bool  Can_shared_data::get_ssv_msg_data(can_data_t &can_data)
 {
   ssv_message_t  message;
   bool  result = false;
+  uint16_t large_msg_num = SSV_MESSAGE_MAX_COUNT - 1;
 
   for (uint8_t i = 0; ((can_data.data_len + sizeof(ssv_message_t)) <= MAX_DATA_LEN); ++i)
   {
-    if (!get_ssv_message(message) || (SSV_MESSAGE_0 + i >= SSV_MESSAGE_MAX_COUNT))
+    if ((SSV_MESSAGE_0 + i >= SSV_MESSAGE_MAX_COUNT) || (!get_ssv_message(message, large_msg_num - i)))
     {
       break ;
     }
+    // uint32_t param_value = 0;
+    // memcpy(&param_value, message.param_val, sizeof(param_value));
+    // cout << "SSV Message: Param Num: " << message.param_num
+    //      << " | Value: " << param_value
+    //      << " | Iterator: " << message.iterator << endl;
     result |= can_data.add_data(message, SSV_MESSAGE_0 + i, MSG_FLAGS[SSV_MESSAGE_0 + i]);
   }
   return result;
@@ -206,10 +226,11 @@ bool  Can_shared_data::get_ssrv_msg_data(can_data_t &can_data)
 {
   ssrv_message_t  message;
   bool  result = false;
+  uint16_t large_msg_num = SSRV_MESSAGE_MAX_COUNT - 1;
 
   for (uint8_t i = 0; ((can_data.data_len + sizeof(ssrv_message_t)) <= MAX_DATA_LEN); ++i)
   {
-    if (!get_ssrv_message(message) || (SSRV_MESSAGE_0 + i >= SSRV_MESSAGE_MAX_COUNT))
+    if ((SSRV_MESSAGE_0 + i >= SSRV_MESSAGE_MAX_COUNT) || (!get_ssrv_message(message, large_msg_num - i)))
     {
       break ;
     }
@@ -221,11 +242,12 @@ bool  Can_shared_data::get_ssrv_msg_data(can_data_t &can_data)
 bool  Can_shared_data::get_sse_msg_data(can_data_t &can_data)
 {
   sse_message_t  message;
-  bool  result = get_sse_message(message);
+  bool  result = false;
+  uint16_t large_msg_num = SSE_MESSAGE_MAX_COUNT - 1;
 
   for (uint8_t i = 0; ((can_data.data_len + sizeof(sse_message_t)) <= MAX_DATA_LEN); ++i)
   {
-    if (!get_sse_message(message) && (SSE_MESSAGE_0 + i >= SSE_MESSAGE_MAX_COUNT))
+    if ((SSE_MESSAGE_0 + i >= SSE_MESSAGE_MAX_COUNT) || (!get_sse_message(message, large_msg_num - i)))
     {
       break ;
     }
@@ -256,10 +278,15 @@ bool  Can_shared_data::handle_messages(can_data_t &can_data)
 bool Can_shared_data::handle_ssv_msg_data(can_data_t &can_data)
 {
   bool result = false;
+  ssv_message_t message;
 
   for (uint8_t i = SSV_MESSAGE_0; i < SSV_MESSAGE_MAX_COUNT; ++i)
   {
-    result &= handle_ssv_message(can_data.get_data<ssv_message_t>(i, MSG_FLAGS[i]), can_cu_id, can_data.idx_can);
+    if (!can_data.get_data<ssv_message_t>(i, message))
+    {
+      break ;
+    }
+    result &= handle_ssv_message(message, can_cu_id, can_data.idx_can);
   }
   return result;
 }
@@ -267,10 +294,15 @@ bool Can_shared_data::handle_ssv_msg_data(can_data_t &can_data)
 bool Can_shared_data::handle_ssrv_msg_data(can_data_t &can_data)
 {
   bool result = false;
+  ssrv_message_t message;
 
   for (uint8_t i = SSRV_MESSAGE_0; i < SSRV_MESSAGE_MAX_COUNT; ++i)
   {
-    result &= handle_ssrv_message(can_data.get_data<ssrv_message_t>(i, MSG_FLAGS[i]));
+    if (!can_data.get_data<ssrv_message_t>(i, message))
+    {
+      break ;
+    }
+    result &= handle_ssrv_message(message);
   }
   return result;
 }
@@ -278,26 +310,33 @@ bool Can_shared_data::handle_ssrv_msg_data(can_data_t &can_data)
 bool Can_shared_data::handle_sse_msg_data(can_data_t &can_data)
 {
   bool result = false;
+  sse_message_t message;
 
   for (uint8_t i = SSE_MESSAGE_0; i < SSE_MESSAGE_MAX_COUNT; ++i)
   {
-    result &= handle_sse_message(can_data.get_data<sse_message_t>(i, MSG_FLAGS[i]));
+    if (!can_data.get_data<sse_message_t>(i, message))
+    {
+      break ;
+    }
+    result &= handle_sse_message(message);
   }
   return result;
 }
 
 void Can_shared_data::service()
 { 
+  mtx_shared_data.lock();
   Shared_data::service();
   if (is_msg_request())
   {
     set_msg_request();
   }
+  mtx_shared_data.unlock();
 }
 
 void Can_shared_data::set_msg_request()
 {
-  bool event_request = true;
-  
+  uint64_t event_request = 1;
+
   write(event, &event_request, sizeof(event_request));
 }

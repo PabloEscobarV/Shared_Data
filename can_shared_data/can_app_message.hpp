@@ -6,11 +6,12 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 21:13:34 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/24 21:28:21 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 03:36:11 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef CAN_APP_MESSAGE_HPP
+#define CAN_APP_MESSAGE_HPP
 
 #include <cstdint>
 
@@ -34,13 +35,14 @@ class Can_app_message
 										const uint16_t message_sid = 0,
 										const uint8_t* ptr_message_size_count = nullptr);
 
-		const uint8_t* get_data_pointer() const;
-		uint8_t        get_data_len() const;
-		Can_app_message_type get_message_type() const;
-		uint16_t       get_flags() const;
-		uint8_t        get_source_controller_id() const;
-		uint16_t       get_sid() const;
-		const uint8_t* get_messages_size_count() const;
+		const uint8_t* 				get_data_pointer() const;
+		uint8_t        				get_data_len() const;
+		Can_app_message_type 	get_message_type() const;
+		uint16_t       				get_flags() const;
+		uint8_t        				get_source_controller_id() const;
+		uint16_t       				get_sid() const;
+		const uint8_t* 				get_messages_size_count() const;
+		inline void						set_pid(uint8_t pid) { source_controller_id = pid; }
 
 	private:
 		
@@ -52,3 +54,5 @@ class Can_app_message
 		uint16_t         			sid;
 		uint8_t          			messages_size_count[MAX_FLAGS_COUNT];
 };
+
+#endif // CAN_APP_MESSAGE_HPP

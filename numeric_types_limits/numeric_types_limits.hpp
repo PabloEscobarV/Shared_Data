@@ -6,11 +6,12 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 20:23:33 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/24 21:28:27 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/26 20:48:24 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef NUMERIC_TYPES_LIMITS_HPP
+#define NUMERIC_TYPES_LIMITS_HPP
 
 #include <cstdint>
 
@@ -37,3 +38,5 @@ class Numeric_t_limits
 			return static_cast<data_t>(-1);
 		}
 };
+
+#endif // NUMERIC_TYPES_LIMITS_HPP

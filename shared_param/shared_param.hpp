@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 20:54:04 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/26 13:59:03 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/26 20:31:14 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ class Shared_param
 
     bool accept_new_value(const uint16_t co_num, Shared_buffer& shared_buffer);
     bool check_new_value(const uint16_t co_num, const uint8_t *ptr_new_param_val) const;
-    bool Shared_param::check_wait_counter(const uint16_t current_tick) const;
+    bool check_wait_counter(const uint16_t current_tick) const;
     template<typename data_t>
     int16_t cmp_data_with_type(const data_t a, const data_t b) const;
     bool is_data_new(const uint16_t co_num, const uint8_t *ptr_new_param_value) const;

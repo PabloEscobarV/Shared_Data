@@ -6,11 +6,12 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 19:53:50 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/25 02:44:19 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 03:36:19 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef CAN_SHARED_DATA_HPP
+#define CAN_SHARED_DATA_HPP
 
 #include "../shared_data/shared_data.hpp"
 #include "can_app_message.hpp"
@@ -66,9 +67,9 @@ class Can_shared_data : public Shared_data
       SSE_MESSAGE_MAX_COUNT
     };
 
-		static const uint8_t  MAX_DATA_LEN = 59;
-		static const uint8_t  MAX_FLAGS_COUNT = 16;
-    static const uint8_t  MSG_FLAGS[MAX_FLAGS_COUNT];
+		static const uint8_t    MAX_DATA_LEN = 59;
+		static const uint8_t    MAX_FLAGS_COUNT = 16;
+    static const uint16_t   MSG_FLAGS[MAX_FLAGS_COUNT];
 
     struct can_data_t
     {
@@ -92,10 +93,9 @@ class Can_shared_data : public Shared_data
       template <typename data_t>
       bool add_data(const data_t& data_obj, const uint16_t msg_type, const uint16_t msg_flag);
       template <typename data_t>
-      data_t get_data(const uint16_t msg_type, const uint16_t msg_flag);
+      bool get_data(const uint16_t msg_type, data_t& dest);
     };
 
-		uint32_t	      shared_data_event;
 		uint16_t	      can_cu_id;
     uint8_t         state;
     int             event;
@@ -117,10 +117,17 @@ class Can_shared_data : public Shared_data
 		Can_shared_data();
 		bool get_message(Can_app_message& can_app_message);
 		bool process_message(const Can_app_message& can_app_message);
-    void init(const uint16_t cu_id, int event_fd);
+    void initialize(const uint16_t cu_id, int event_fd);
     void service();
     inline bool is_msg_request() const
     {
       return is_ssv_msg_request() || is_ssrv_msg_request() || is_sse_msg_request();
     }
+
+    inline uint16_t get_iterator(const uint16_t sync_param_idx) const
+    {
+      return shared_params[sync_param_idx].get_iterator();
+    }
 };
+
+#endif // CAN_SHARED_DATA_HPP

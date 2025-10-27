@@ -6,7 +6,7 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 20:51:24 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/23 21:13:36 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/26 20:30:48 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #define SHARED_BUFFER_HPP
 
 #include <cstdint>
+#include <cstring>
 
 class Shared_buffer
 {

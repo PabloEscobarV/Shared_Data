@@ -6,16 +6,17 @@
 /*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:05:09 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/26 13:59:01 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 03:36:18 by Pablo Escob      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SHARED_DATA_HPP
 #define SHARED_DATA_HPP
 
-#include "shared_param/shared_param.hpp"
-#include "queue/queue.hpp"
-#include "shared_buffer/shared_buffer.hpp"
+#include "../shared_param/shared_param.hpp"
+#include "../queue/queue.hpp"
+#include "../shared_buffer/shared_buffer.hpp"
+#include "../csl_cmp_int/csl_cmp_int.hpp"
 
 #include "../hdrs/test.hpp"
 
@@ -80,22 +81,23 @@ class Shared_data
 
       sse_message_t(const uint8_t *ptr_data = nullptr, const uint16_t data_len = 0);
     };
-    
-    bool get_ssv_message(ssv_message_t &message);
-    bool get_ssrv_message(ssrv_message_t &message);
-    bool get_sse_message(sse_message_t& message);
+
+    bool get_ssv_message(ssv_message_t &message, const uint16_t msg_number);
+    bool get_ssrv_message(ssrv_message_t &message, const uint16_t msg_number);
+    bool get_sse_message(sse_message_t& message, const uint16_t msg_number);
     bool handle_ssv_message(const ssv_message_t &message, const uint16_t id, const uint16_t id_can);
     bool handle_ssrv_message(const ssrv_message_t &message);
     bool handle_sse_message(const sse_message_t& message);
 
-  private:
     Shared_param                      shared_params[COUNT];
+  private:
     Shared_buffer                     shared_buffer;
     FSQueue<sse_service_t, PACK_SIZE> sse_queue;
     FSQueue<uint8_t, COUNT>           ssrv_queue;
     uint16_t                          idx_ssv;
     uint16_t                          idx_ssv_new;
     uint16_t                          tick;
+    uint16_t                          all_param_ticks;
     uint8_t                           state;
 
     bool  check_counter_ssv() const;
@@ -118,7 +120,7 @@ class Shared_data
   public:
     Shared_data();
     bool add_ssrv_message(const uint16_t param_num, const uint8_t *new_param_val);
-    void initialize();
+    void initialize(const uint8_t ssv_pack_size);
     void service();
     inline bool is_synced() const { return Bit::test(state, SYNCED); }
     inline bool is_ssv_msg_request() const { return Bit::test(state, SSV_MSG_REQUEST); }
