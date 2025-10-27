@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shared_param.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 20:54:04 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/26 20:31:14 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 20:25:36 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,7 +155,15 @@ class Shared_param
     inline bool is_new_val_send_state() const { return Bit::test(state, NEW_VAL_SEND_STATE); }
     inline bool is_new_value_allowed() const { return !Bit::test(state, NEW_VAL_REQ_NOT_ALLOWED); }
     inline bool is_synced() const { return Bit::test(state, SYNCED); }
-    inline bool is_new_value_accepted() const { return Bit::test(state, ACCEPTED_NEW_VALUE); }
+
+    inline bool is_new_value_accepted()
+    {
+      const bool result = Bit::test(state, ACCEPTED_NEW_VALUE);
+
+      Bit::clear(state, ACCEPTED_NEW_VALUE);
+      return result;
+    }
+
     inline bool is_out_of_range_ssv_state(const uint8_t error_code = UINT8_MAX) const
     {
       if (error_code == UINT8_MAX)

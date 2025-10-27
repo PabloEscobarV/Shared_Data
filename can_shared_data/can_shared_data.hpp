@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   can_shared_data.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 19:53:50 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 03:36:19 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 20:49:21 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,13 +96,13 @@ class Can_shared_data : public Shared_data
       bool get_data(const uint16_t msg_type, data_t& dest);
     };
 
-		uint16_t	      can_cu_id;
-    uint8_t         state;
-    int             event;
+    uint32_t            _event;            ///< Event file descriptor for signaling.
+		uint8_t	            _can_cu_id;        ///< Controller CAN address.
+    uint8_t             _state;            ///< State of the class.
 
     bool is_cfg_valid() const
     {
-      return Bit::test(state, IS_CFG_VALID);
+      return Bit::test(_state, IS_CFG_VALID);
     }
 		bool get_messages(can_data_t &can_data);
 		bool get_ssv_msg_data(can_data_t &can_data);
@@ -113,6 +113,13 @@ class Can_shared_data : public Shared_data
     bool handle_ssrv_msg_data(can_data_t &can_data);
     bool handle_sse_msg_data(can_data_t &can_data);
     void set_msg_request();
+
+    template <typename data_t>
+    inline bool check_msg_req_condition(const uint16_t current_msg, const uint16_t max_available_msgs, const uint16_t data_len)
+    {
+      return (current_msg < max_available_msgs) && ((data_len + sizeof(data_t)) <= Can_shared_data::MAX_DATA_LEN);
+    }
+
 	public:
 		Can_shared_data();
 		bool get_message(Can_app_message& can_app_message);

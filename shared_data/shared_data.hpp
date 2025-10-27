@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shared_data.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:05:09 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 03:36:18 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 20:58:14 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,12 +82,21 @@ class Shared_data
       sse_message_t(const uint8_t *ptr_data = nullptr, const uint16_t data_len = 0);
     };
 
-    bool get_ssv_message(ssv_message_t &message, const uint16_t msg_number);
-    bool get_ssrv_message(ssrv_message_t &message, const uint16_t msg_number);
-    bool get_sse_message(sse_message_t& message, const uint16_t msg_number);
+    bool get_ssv_message(ssv_message_t &message);
+    bool get_ssrv_message(ssrv_message_t &message);
+    bool get_sse_message(sse_message_t& message);
     bool handle_ssv_message(const ssv_message_t &message, const uint16_t id, const uint16_t id_can);
     bool handle_ssrv_message(const ssrv_message_t &message);
     bool handle_sse_message(const sse_message_t& message);
+
+    inline void clear_ssv_msg_request() { Bit::clear(state, SSV_MSG_REQUEST); }
+    inline void clear_ssrv_msg_request() { Bit::clear(state, SSRV_MSG_REQUEST); }
+    inline void clear_sse_msg_request() { Bit::clear(state, SSE_MSG_REQUEST); }
+    inline bool is_ssv_msg_request() const { return Bit::test(state, SSV_MSG_REQUEST); }
+    inline bool is_ssrv_msg_request() const { return Bit::test(state, SSRV_MSG_REQUEST); }
+    inline bool is_sse_msg_request() const { return Bit::test(state, SSE_MSG_REQUEST); }
+    inline uint16_t get_ssrv_msg_count() const { return ssrv_queue.get_count(); }
+    inline uint16_t get_sse_msg_count() const { return sse_queue.get_count(); }
 
     Shared_param                      shared_params[COUNT];
   private:
@@ -111,21 +120,29 @@ class Shared_data
     void service_wrn_state();
     void set_msg_request();
     void service_sync_state();
+    bool write_ssv_data(const uint16_t idx, ssv_message_t &message);
+
     inline uint16_t get_param_co_num(const uint16_t sync_param_idx) const
     {
       return sync_param_list[sync_param_idx];
     }
+
     inline void period_counter() { ++tick; }
 
+    void inline clear_msg_request(const uint8_t bit_to_clear, const bool clear_msg)
+    {
+      if (clear_msg)
+      {
+        Bit::clear(state, bit_to_clear);
+      }
+    }
+    
   public:
     Shared_data();
     bool add_ssrv_message(const uint16_t param_num, const uint8_t *new_param_val);
     void initialize(const uint8_t ssv_pack_size);
     void service();
     inline bool is_synced() const { return Bit::test(state, SYNCED); }
-    inline bool is_ssv_msg_request() const { return Bit::test(state, SSV_MSG_REQUEST); }
-    inline bool is_ssrv_msg_request() const { return Bit::test(state, SSRV_MSG_REQUEST); }
-    inline bool is_sse_msg_request() const { return Bit::test(state, SSE_MSG_REQUEST); }
  };
 
 #endif

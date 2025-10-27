@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   shared_param.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:02:52 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 03:36:15 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/10/27 20:27:43 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,13 +255,6 @@ void Shared_param::service_new_value(const uint16_t co_num, const uint16_t curre
   if (check_wait_counter(current_tick))
   {
     accept_new_value(param_data->get_param_num(counter), shared_buffer);
-  }
-  else
-  {
-    if (Bit::test(state, ACCEPTED_NEW_VALUE))
-    {
-      Bit::clear(state, ACCEPTED_NEW_VALUE);
-    }
   }
 }
 
