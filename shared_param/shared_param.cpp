@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:02:52 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 20:27:43 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/10/29 12:31:25 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ bool Shared_param::accept_new_value(const uint16_t co_num, Shared_buffer& shared
 {
   bool result = is_new_value_allowed();
 
-  if (result && (Bit::test(state, SYNCED)))
+  if (result)
   {
     result = write_param_value(co_num, shared_buffer);
     update_iterator();
@@ -99,9 +99,9 @@ bool Shared_param::handle_ssv_value(const uint16_t co_num,
   bool result = ptr_param_val && is_param_val_in_range(co_num, ptr_param_val);
 
   // cout << "Handling SSV Shared Param Value..."  << "IN RANGE: " << (result ? "YES" : "NO") << endl;
+  Bit::set(state, SYNCED);
   if (result)
   {
-    Bit::set(state, SYNCED);
     if (is_req_update_param_value(iter_synchro, id_can, id_can_received) && write_param_value(co_num, ptr_param_val))
     {
       reset_out_of_range_ssv_state();

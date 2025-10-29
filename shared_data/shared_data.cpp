@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:11:03 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 20:58:01 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/10/29 12:36:06 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,19 +128,15 @@ bool  Shared_data::get_ssv_message(ssv_message_t &message)
 {
   bool result = false;
 
-  if (Bit::test(state, SSV_MSG_REQUEST))
+  if (idx_ssv_new == csl_cmp_int<uint16_t>::not_valid())
   {
-    if (idx_ssv_new == csl_cmp_int<uint16_t>::not_valid())
-    {
-      result = write_ssv_data(idx_ssv, message);
-      idx_ssv = static_cast<uint16_t>((idx_ssv + 1) % COUNT);
-    }
-    else
-    {
-      result = write_ssv_data(idx_ssv_new, message);
-      idx_ssv_new = csl_cmp_int<uint16_t>::not_valid();
-    }
-    clear_msg_request(SSV_MSG_REQUEST, (idx_ssv == 0));
+    result = write_ssv_data(idx_ssv, message);
+    idx_ssv = static_cast<uint16_t>((idx_ssv + 1) % COUNT);
+  }
+  else
+  {
+    result = write_ssv_data(idx_ssv_new, message);
+    idx_ssv_new = csl_cmp_int<uint16_t>::not_valid();
   }
   return result;
 }
@@ -148,7 +144,7 @@ bool  Shared_data::get_ssv_message(ssv_message_t &message)
 bool  Shared_data::get_ssrv_message(ssrv_message_t &message)
 {
   uint8_t ssrv_idx;
-  bool result = Bit::test(state, SSRV_MSG_REQUEST) && ssrv_queue.peek(ssrv_idx) && (ssrv_idx < COUNT);
+  bool result = ssrv_queue.peek(ssrv_idx) && (ssrv_idx < COUNT);
 
   if (result)
   {
@@ -165,7 +161,7 @@ bool  Shared_data::get_ssrv_message(ssrv_message_t &message)
 bool  Shared_data::get_sse_message(sse_message_t &message)
 {
   sse_service_t  sse_service;
-  const bool  result = Bit::test(state, SSE_MSG_REQUEST) && sse_queue.pop(sse_service) && (sse_service.idx < COUNT);
+  const bool  result = sse_queue.pop(sse_service) && (sse_service.idx < COUNT);
 
   if (result)
   {

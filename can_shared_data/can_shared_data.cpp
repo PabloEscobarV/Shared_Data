@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 21:25:06 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 20:55:14 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/10/29 12:45:53 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,11 +176,11 @@ bool  Can_shared_data::get_messages(can_data_t &can_data)
   }
   if (is_ssrv_msg_request())
   {
-    result &= get_ssrv_msg_data(can_data);
+    result |= get_ssrv_msg_data(can_data);
   }
   if (is_sse_msg_request())
   {
-    result &= get_sse_msg_data(can_data);
+    result |= get_sse_msg_data(can_data);
   }
   mtx_shared_data.unlock();
   return result;
@@ -208,14 +208,15 @@ bool  Can_shared_data::get_ssv_msg_data(can_data_t &can_data)
   ssv_message_t  message;
   bool  result = false;
 
-  for (uint8_t i = SSV_MESSAGE_0; ((can_data.data_len + sizeof(ssv_message_t)) <= MAX_DATA_LEN); ++i)
+  for (uint8_t i = SSV_MESSAGE_0; check_ssv_msg_req(i, can_data.data_len); ++i)
   {
-    if ((i >= SSV_MESSAGE_MAX_COUNT) || (!get_ssv_message(message)))
+    if (get_ssv_message(message))
     {
-      break ;
+      result |= can_data.add_data(message, i, MSG_FLAGS[i]);
+      clear_ssv_msg_request(get_ssv_idx() == 0);
     }
-    result |= can_data.add_data(message, i, MSG_FLAGS[i]);
   }
+  clear_ssv_msg_request();
   return result;
 }
 
@@ -223,13 +224,13 @@ bool  Can_shared_data::get_ssrv_msg_data(can_data_t &can_data)
 {
   ssrv_message_t  message;
   bool  result = false;
-  uint16_t ssrv_msg_count = get_ssrv_msg_count();
+  uint16_t ssrv_msg_count = get_ssrv_msg_count() + static_cast<uint16_t>(SSRV_MESSAGE_0);
 
-  if (ssrv_msg_count >= SSRV_MESSAGE_MAX_COUNT)
+  if (ssrv_msg_count >= (SSRV_MESSAGE_MAX_COUNT))
   {
     ssrv_msg_count = static_cast<uint16_t>(SSRV_MESSAGE_MAX_COUNT) - 1;
   }
-  for (uint8_t i = SSRV_MESSAGE_0; check_msg_req_condition<ssrv_message_t>(i, ssrv_msg_count, can_data.data_len); ++i)
+  for (uint8_t i = SSRV_MESSAGE_0; check_msg_req<ssrv_message_t>(i, ssrv_msg_count, can_data.data_len); ++i)
   {
     if (get_ssrv_message(message))
     {
@@ -244,13 +245,13 @@ bool  Can_shared_data::get_sse_msg_data(can_data_t &can_data)
 {
   sse_message_t  message;
   bool  result = false;
-  uint16_t msgs_number = get_sse_msg_count();
+  uint16_t msgs_count = get_sse_msg_count() + static_cast<uint16_t>(SSE_MESSAGE_0);
 
-  if (msgs_number >= SSE_MESSAGE_MAX_COUNT)
+  if (msgs_count >= SSE_MESSAGE_MAX_COUNT)
   {
-    msgs_number = static_cast<uint16_t>(SSE_MESSAGE_MAX_COUNT) - 1;
+    msgs_count = static_cast<uint16_t>(SSE_MESSAGE_MAX_COUNT) - 1;
   }
-  for (uint8_t i = SSE_MESSAGE_0; check_msg_req_condition<sse_message_t>(i, msgs_number, can_data.data_len); ++i)
+  for (uint8_t i = SSE_MESSAGE_0; check_msg_req<sse_message_t>(i, msgs_count, can_data.data_len); ++i)
   {
     if (get_sse_message(message))
     {

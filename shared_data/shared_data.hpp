@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:05:09 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 20:58:14 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/10/29 12:44:28 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ class Shared_data
     bool handle_ssrv_message(const ssrv_message_t &message);
     bool handle_sse_message(const sse_message_t& message);
 
-    inline void clear_ssv_msg_request() { Bit::clear(state, SSV_MSG_REQUEST); }
+    inline void clear_ssv_msg_request(const bool condition = true) { Bit::clear(state, SSV_MSG_REQUEST); }
     inline void clear_ssrv_msg_request() { Bit::clear(state, SSRV_MSG_REQUEST); }
     inline void clear_sse_msg_request() { Bit::clear(state, SSE_MSG_REQUEST); }
     inline bool is_ssv_msg_request() const { return Bit::test(state, SSV_MSG_REQUEST); }
@@ -97,6 +97,7 @@ class Shared_data
     inline bool is_sse_msg_request() const { return Bit::test(state, SSE_MSG_REQUEST); }
     inline uint16_t get_ssrv_msg_count() const { return ssrv_queue.get_count(); }
     inline uint16_t get_sse_msg_count() const { return sse_queue.get_count(); }
+    inline uint16_t get_ssv_idx() const { return idx_ssv; }
 
     Shared_param                      shared_params[COUNT];
   private:

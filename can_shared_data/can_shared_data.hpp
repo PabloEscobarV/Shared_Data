@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 19:53:50 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 20:49:21 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/10/29 12:42:02 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,9 +115,14 @@ class Can_shared_data : public Shared_data
     void set_msg_request();
 
     template <typename data_t>
-    inline bool check_msg_req_condition(const uint16_t current_msg, const uint16_t max_available_msgs, const uint16_t data_len)
+    inline bool check_msg_req(const uint16_t current_msg, const uint16_t max_available_msgs, const uint16_t data_len) const
     {
       return (current_msg < max_available_msgs) && ((data_len + sizeof(data_t)) <= Can_shared_data::MAX_DATA_LEN);
+    }
+
+    inline bool check_ssv_msg_req(const uint16_t current_msg, const uint16_t data_len) const
+    {
+      return check_msg_req<ssv_message_t>(current_msg, SSV_MESSAGE_MAX_COUNT, data_len) && is_ssv_msg_request();
     }
 
 	public:
