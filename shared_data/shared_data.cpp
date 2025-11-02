@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:11:03 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/29 12:36:06 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/11/02 21:38:55 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,18 +71,15 @@ bool  Shared_data::add_ssrv_message(const uint16_t param_num, const uint8_t *ptr
   uint8_t ssrv_idx;
   bool  result = false;
 
-  if (Bit::test(state, SYNCED))
+  ssrv_idx = get_sync_param_list_idx(param_num);
+  if ((ssrv_idx < COUNT) && (shared_buffer.set_offset(get_all_comm_obj_len(ssrv_idx))))
   {
-    ssrv_idx = get_sync_param_list_idx(param_num);
-    if ((ssrv_idx < COUNT) && (shared_buffer.set_offset(get_all_comm_obj_len(ssrv_idx))))
+    if (shared_params[ssrv_idx].add_new_value(get_param_co_num(ssrv_idx),
+                                              shared_buffer,
+                                              ptr_new_param_val))
     {
-      if (shared_params[ssrv_idx].add_new_value(get_param_co_num(ssrv_idx),
-                                                shared_buffer,
-                                                ptr_new_param_val))
-      {
-        shared_params[ssrv_idx].set_send_counter(SSRV_ATTEMPTS);
-        result = ssrv_queue.push(ssrv_idx);
-      }
+      shared_params[ssrv_idx].set_send_counter(SSRV_ATTEMPTS);
+      result = ssrv_queue.push(ssrv_idx);
     }
   }
   return result;
@@ -204,9 +201,7 @@ uint8_t  Shared_data::get_sync_param_list_idx(const uint16_t co_num) const
   return mid;
 }
 
-bool  Shared_data::handle_ssv_message(const ssv_message_t &message,
-                                            const uint16_t id,
-                                            const uint16_t id_can)
+bool  Shared_data::handle_ssv_message(const ssv_message_t &message, const bool is_can_id_less)
 {
   const sse_service_t  sse_service(get_sync_param_list_idx(message.param_num), SSRV_ATTEMPTS);
   bool  result = false;
@@ -219,7 +214,7 @@ bool  Shared_data::handle_ssv_message(const ssv_message_t &message,
     //      << " with Iterator: " << message.iterator
     //      << " and Value: " << tmp << endl;
     result = shared_params[sse_service.idx].handle_ssv_value(
-              get_param_co_num(sse_service.idx), message.param_val, message.iterator, id, id_can);
+              get_param_co_num(sse_service.idx), message.param_val, message.iterator, is_can_id_less);
     if (!result)
     {
       result = sse_queue.push(sse_service);

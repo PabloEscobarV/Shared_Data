@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:05:09 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/29 12:44:28 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/11/02 21:36:49 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ class Shared_data
     bool get_ssv_message(ssv_message_t &message);
     bool get_ssrv_message(ssrv_message_t &message);
     bool get_sse_message(sse_message_t& message);
-    bool handle_ssv_message(const ssv_message_t &message, const uint16_t id, const uint16_t id_can);
+    bool handle_ssv_message(const ssv_message_t &message, const bool is_can_id_less);
     bool handle_ssrv_message(const ssrv_message_t &message);
     bool handle_sse_message(const sse_message_t& message);
 

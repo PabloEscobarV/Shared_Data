@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 20:54:04 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 20:25:36 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/11/02 21:36:20 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,9 +50,15 @@ class Shared_param
     int16_t cmp_data_with_type(const data_t a, const data_t b) const;
     bool is_data_new(const uint16_t co_num, const uint8_t *ptr_new_param_value) const;
     bool is_req_update_param_value(const uint16_t iter_synchro, const uint16_t idx, const uint16_t idx_can);
+    bool is_update_allowed(const uint16_t iter_synchro, const bool is_local_id_less);
     bool is_param_val_in_range(const uint16_t co_num, const uint8_t *ptr_new_data) const;
+    void notify_app_param_val(const uint16_t co_num) const;
     void service_flags();
     void service_new_value(const uint16_t co_num, const uint16_t current_tick, Shared_buffer& shared_buffer);
+    bool update_ssv_data(const uint16_t co_num,
+                        const uint8_t *ptr_param_val,
+                        const uint16_t iter_synchro,
+                        const bool id_can_id_less);
     bool write_param_value(const uint16_t co_num, const uint8_t *ptr_new_param_value) const;
     bool write_param_value(const uint16_t co_num, Shared_buffer& shared_buffer) const;
     inline bool is_out_of_range_ssv_reset_state() const
@@ -135,8 +141,7 @@ class Shared_param
     bool handle_ssv_value(const uint16_t co_num,
                           const uint8_t *param_val,
                           const uint16_t iter_synchro,
-                          const uint16_t id_can,
-                          const uint16_t id_can_received);
+                          const bool id_can_id_less);
     bool handle_ssrv_value(const uint16_t co_num, const uint8_t *new_p_val);
     bool handle_error_code(const uint8_t error_code);
     void reset_counter();

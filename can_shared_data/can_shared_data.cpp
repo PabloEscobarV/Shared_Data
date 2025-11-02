@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 21:25:06 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/29 12:45:53 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/11/02 21:41:01 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -281,7 +281,7 @@ bool Can_shared_data::handle_ssv_msg_data(can_data_t &can_data)
   {
     if (can_data.get_data<ssv_message_t>(i, message))
     {
-      result &= handle_ssv_message(message, _can_cu_id, can_data.idx_can);
+      result &= handle_ssv_message(message, (_can_cu_id < can_data.idx_can));
     }
   }
   return result;

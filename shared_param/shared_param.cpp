@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:02:52 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/29 12:31:25 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/11/02 21:35:50 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ bool Shared_param::accept_new_value(const uint16_t co_num, Shared_buffer& shared
     Bit::set(state, ACCEPTED_NEW_VALUE);
   }
   reset_counter();
+  reset_new_value_not_allowed_state();
   return result;
 }
 
@@ -54,9 +55,9 @@ bool Shared_param::check_wait_counter(const uint16_t current_tick) const
 
 bool Shared_param::add_new_value(const uint16_t co_num, Shared_buffer& shared_buffer, const uint8_t *ptr_new_param_val)
 {
-  bool result = false;
+  bool result = check_new_value(co_num, ptr_new_param_val);
 
-  if (check_new_value(co_num, ptr_new_param_val))
+  if (result)
   {
     (void)shared_buffer.write_data(ptr_new_param_val, sizeof(uint32_t));
     reset_out_of_range_ssrv_state();
@@ -93,16 +94,14 @@ bool Shared_param::get_param_value(const uint16_t co_num, uint8_t *ptr_dest) con
 bool Shared_param::handle_ssv_value(const uint16_t co_num,
                                     const uint8_t *ptr_param_val,
                                     const uint16_t iter_synchro,
-                                    const uint16_t id_can,
-                                    const uint16_t id_can_received)
+                                    const bool id_can_id_less)
 {
-  bool result = ptr_param_val && is_param_val_in_range(co_num, ptr_param_val);
+  const bool result = ptr_param_val && is_param_val_in_range(co_num, ptr_param_val);
 
   // cout << "Handling SSV Shared Param Value..."  << "IN RANGE: " << (result ? "YES" : "NO") << endl;
-  Bit::set(state, SYNCED);
   if (result)
   {
-    if (is_req_update_param_value(iter_synchro, id_can, id_can_received) && write_param_value(co_num, ptr_param_val))
+    if (update_ssv_data(co_num, ptr_param_val, iter_synchro, id_can_id_less))
     {
       reset_out_of_range_ssv_state();
     }
@@ -112,6 +111,7 @@ bool Shared_param::handle_ssv_value(const uint16_t co_num,
     set_out_of_range_ssv_state();
     reset_out_of_range_ssv_reset_state();
   }
+  Bit::set(state, SYNCED);
   return result;
 }
 
@@ -202,22 +202,17 @@ bool Shared_param::is_data_new(const uint16_t co_num, const uint8_t *ptr_new_par
   return result;
 }
 
-bool Shared_param::is_req_update_param_value(const uint16_t iter_synchro,
-                                            const uint16_t id_can,
-                                            const uint16_t id_can_received)
+bool Shared_param::is_update_allowed(const uint16_t iter_synchro, const bool is_local_id_less)
 {
   bool is_req = true;
 
-  if (!iterator.update_iterator(static_cast<uint8_t>(iter_synchro)))
+  if (P_Iterator::check_left_iter_is_newer(iterator.get_iterator(), static_cast<uint8_t>(iter_synchro)))
   {
-    if (P_Iterator::check_left_iter_is_newer(iterator.get_iterator(), static_cast<uint8_t>(iter_synchro)))
-    {
-      is_req = false;
-    }
-    if (is_req && (id_can_received > id_can))
-    {
-      is_req = false;
-    }
+    is_req = false;
+  }
+  if (is_req && is_local_id_less)
+  {
+    is_req = false;
   }
   return is_req;
 }
@@ -239,7 +234,6 @@ bool Shared_param::is_param_val_in_range(const uint16_t co_num, const uint8_t *p
 void Shared_param::service_flags()
 {
   reset_out_of_range_ssrv_state();
-  reset_new_value_not_allowed_state();
   if (is_out_of_range_ssv_reset_state())
   {
     reset_out_of_range_ssv_state();
@@ -256,6 +250,24 @@ void Shared_param::service_new_value(const uint16_t co_num, const uint16_t curre
   {
     accept_new_value(param_data->get_param_num(counter), shared_buffer);
   }
+}
+
+bool Shared_param::update_ssv_data(const uint16_t co_num,
+                                  const uint8_t *ptr_param_val,
+                                  const uint16_t iter_synchro,
+                                  const bool id_can_id_less)
+{
+  bool result = iterator.update_iterator(static_cast<uint8_t>(iter_synchro));
+
+  if(!result)
+  {
+    result = is_update_allowed(iter_synchro, id_can_id_less);
+  }
+  if (result)
+  {
+    result = write_param_value(co_num, ptr_param_val);
+  }
+  return result;
 }
 
 bool Shared_param::write_param_value(const uint16_t co_num, const uint8_t *ptr_new_param_value) const
