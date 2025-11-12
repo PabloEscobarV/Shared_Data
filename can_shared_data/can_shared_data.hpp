@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 19:53:50 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/11/02 21:39:37 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/11/07 11:45:41 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,37 +34,6 @@ class Can_shared_data : public Shared_data
       SSV_MESSAGE,
       SSRV_MESSAGE = 5,
       SSE_MESSAGE = 12,
-    };
-
-    enum e_ssv_msg_types
-    {
-      SSV_MESSAGE_0 = SSV_MESSAGE,
-      SSV_MESSAGE_1,
-      SSV_MESSAGE_2,
-      SSV_MESSAGE_3,
-      SSV_MESSAGE_4,
-      SSV_MESSAGE_MAX_COUNT
-    };
-
-    enum e_ssrv_msg_types
-    {
-      SSRV_MESSAGE_0 = SSRV_MESSAGE,
-      SSRV_MESSAGE_1,
-      SSRV_MESSAGE_2,
-      SSRV_MESSAGE_3,
-      SSRV_MESSAGE_4,
-      SSRV_MESSAGE_5,
-      SSRV_MESSAGE_6,
-      SSRV_MESSAGE_MAX_COUNT
-    };
-
-    enum e_sse_msg_types
-    {
-      SSE_MESSAGE_0 = SSE_MESSAGE,
-      SSE_MESSAGE_1,
-      SSE_MESSAGE_2,
-      SSE_MESSAGE_3,
-      SSE_MESSAGE_MAX_COUNT
     };
 
 		static const uint8_t    MAX_DATA_LEN = 59;
@@ -126,6 +95,37 @@ class Can_shared_data : public Shared_data
     }
 
 	public:
+    enum : uint16_t
+    {
+      SSV_MESSAGE_0 = SSV_MESSAGE,
+      SSV_MESSAGE_1,
+      SSV_MESSAGE_2,
+      SSV_MESSAGE_3,
+      SSV_MESSAGE_4,
+      SSV_MESSAGE_MAX_COUNT
+    };
+
+    enum : uint16_t
+    {
+      SSRV_MESSAGE_0 = SSRV_MESSAGE,
+      SSRV_MESSAGE_1,
+      SSRV_MESSAGE_2,
+      SSRV_MESSAGE_3,
+      SSRV_MESSAGE_4,
+      SSRV_MESSAGE_5,
+      SSRV_MESSAGE_6,
+      SSRV_MESSAGE_MAX_COUNT
+    };
+
+    enum : uint16_t
+    {
+      SSE_MESSAGE_0 = SSE_MESSAGE,
+      SSE_MESSAGE_1,
+      SSE_MESSAGE_2,
+      SSE_MESSAGE_3,
+      SSE_MESSAGE_MAX_COUNT
+    };
+
 		Can_shared_data();
 		bool get_message(Can_app_message& can_app_message);
 		bool process_message(const Can_app_message& can_app_message);

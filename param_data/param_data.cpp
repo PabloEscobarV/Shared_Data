@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   param_data.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/26 20:56:53 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/26 20:57:19 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/11/10 17:27:18 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,8 @@
 
 void	ParamData::set_param_value(uint16_t idx, uint16_t p_num, uint32_t p_val)
 {
-	p_data[idx] = { p_num, p_val };
+	p_data[idx].p_num = p_num;
+	p_data[idx].p_val = p_val;
 }
 
 uint32_t	ParamData::get_param_value(uint16_t idx) const

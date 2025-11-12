@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   test_create_cu.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/26 14:27:52 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 03:36:09 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/11/12 09:55:56 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../can_shared_data/can_shared_data.hpp"
 #include "../param_data/param_data.hpp"
 #include "../hdrs/socket.hpp"
+#include "../hdrs/test.hpp"
 
 #include <thread>
 #include <chrono>
@@ -35,6 +36,7 @@ enum events
 	EVENT_NEW_MESSAGE = 1 << 0,
 };
 
+mutex			print_mutex;
 ParamData	*param_data;
 uint16_t	sync_param_list[NUM_SYNC_PARAM];
 
@@ -96,31 +98,6 @@ void send_data(int event_fd, Can_shared_data& can_shared_data, ParamData *param_
 	}
 }
 
-void send_test_data(Can_shared_data& can_shared_data, ParamData *param_data, uint16_t pid)
-{
-	udp_data_t udp_data = create_sender_socket(MULTICAST_TEST_IP, MULTICAST_TEST_PORT);
-	test_data_t test_data {};
-	static ParamData *old_param_data = new ParamData();
-
-	test_data.pid = pid;
-	while (true)
-	{
-		for (int i = 0; i < NUM_SYNC_PARAM; ++i)
-		{
-			if (param_data->get_param_value(i) != old_param_data->get_param_value(i))
-			{
-				test_data.param_num = param_data->get_param_num(i);
-				test_data.param_idx = i;
-				test_data.iterator = can_shared_data.get_iterator(i);
-				test_data.param_val = param_data->get_param_value(i);
-				old_param_data->set_param_value(i, test_data.param_num, test_data.param_val);
-				send_udp(udp_data, test_data);
-			}
-		}
-		this_thread::sleep_for(chrono::milliseconds(TICK_PERIOD));
-	}
-}
-
 void service_20ms(Can_shared_data& can_shared_data)
 {
 	while (true)
@@ -155,6 +132,9 @@ void receive_ssrv_request(Can_shared_data& can_shared_data, uint16_t pid)
 		receive_udp(udp_data, ssrv_req_message);
 		if (ssrv_req_message.id == pid)
 		{
+			cout << "Received SSRV request for: " << ssrv_req_message.id
+					 << ", Param Index: " << ssrv_req_message.param_idx
+					 << ", Param Value: " << ssrv_req_message.param_val << endl;
 			can_shared_data.add_ssrv_message(param_data->get_param_num(ssrv_req_message.param_idx),
 											reinterpret_cast<const uint8_t*>(&ssrv_req_message.param_val));
 		}
@@ -184,10 +164,6 @@ void crt_threads(int event_fd,
 	{
 		receive_ssrv_request(can_shared_data, pid);
 	});
-	thread	send_test_data_th([&]()
-	{
-		send_test_data(can_shared_data, param_data, pid);
-	});
 	thread	signal_handler_th([&]()
 	{
 		print_signal_handler(set, print_sem);
@@ -196,7 +172,6 @@ void crt_threads(int event_fd,
 	service_th.join();
 	receiver_th.join();
 	ssrv_th.join();
-	send_test_data_th.join();
 	signal_handler_th.join();
 }
 
@@ -207,10 +182,8 @@ void	init_param_data(ParamData *param_data, uint16_t step_kef, uint16_t pid)
 	for (uint16_t i = 0; i < NUM_SYNC_PARAM; ++i)
 	{
 		param_value = static_cast<int32_t>(std::rand() % (9999 + pid) + 2077 + pid);
-		param_data->set_param_value(i, i * step_kef, param_value);
-		param_data->set_param_max_value(100000, i);
-		param_data->set_param_min_value(0, i);
 		sync_param_list[i] = i * step_kef;
+		param_data->set_param_data(i, sync_param_list[i], param_value, 100000, 0);
 	}
 }
 

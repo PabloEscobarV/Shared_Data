@@ -3,14 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   run_test.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/14 13:55:51 by blackrider        #+#    #+#             */
-/*   Updated: 2025/10/27 03:36:08 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/11/12 08:58:57 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../hdrs/test.hpp"
+
+#include "info_all_cu.hpp"
+#include "test_ssrv.hpp"
 
 #include <iostream>
 #include <cstdint>
@@ -21,6 +24,9 @@
 #include <signal.h>
 #include <semaphore.h>
 #include <fcntl.h>
+#include <thread>
+#include <fstream>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -110,14 +116,14 @@ int	menu_f(vector<int>& pids, input_data_t& in_data, sem_t *sem_output)
 	int menu = 0;
 
 	// sem_wait(sem_output);
-	cout << "Enter 0 for exist, 1 for add new process, 2 for end process, 3 for send signal:\n";
+	cout << "Enter 0 for exist, 1 for add new process, 2 for end process, 3 for send signal or 4 for send SSRV reqest:\n";
 	cin >> menu;
 	cin.ignore(numeric_limits<streamsize>::max(), '\n');
 	switch (menu)
 	{
 	case 0:
 		cout << "Exiting..." << endl;
-		break;;
+		break;
 	case 1:
 		cout << "Enter the ID of the new process: ";
 		cin >> id;
@@ -139,6 +145,9 @@ int	menu_f(vector<int>& pids, input_data_t& in_data, sem_t *sem_output)
 		cin.ignore(numeric_limits<streamsize>::max(), '\n');
 		kill(pids[id], SIGUSR1);
 		break;
+	case 4:
+		send_ssrv_request();
+		break;
 	default:
 		cout << "Invalid option. Please try again." << endl;
 		break;
@@ -146,7 +155,7 @@ int	menu_f(vector<int>& pids, input_data_t& in_data, sem_t *sem_output)
 	return menu;
 }
 
-void	end_apps(vector<int>& pids, input_data_t& in_data, sem_t *sem_output)
+void	end_apps(int stat_pid, vector<int>& pids, input_data_t& in_data, sem_t *sem_output)
 {
 	int menu = 0;
 
@@ -159,17 +168,54 @@ void	end_apps(vector<int>& pids, input_data_t& in_data, sem_t *sem_output)
 			cout << "Process with PID " << pid << " has been terminated." << endl;
 		}
 	}
+	kill(stat_pid, SIGTERM);
 }
+
+void run_stat_process()
+{
+	const char* fifo= "info_all_cu_fifo";
+	unlink(fifo); 
+	if (mkfifo(fifo, 0666) == -1) 
+	{
+		cerr << "Failed to create FIFO" << endl;
+		return;
+	}
+	system("gnome-terminal -- bash -c 'echo Reading FIFO...; cat info_all_cu_fifo;' &");
+	ofstream out(fifo);
+	if (!out) { std::cerr << "open fifo failed\n"; return; }
+	streambuf* coutbuf = std::cout.rdbuf(out.rdbuf());
+	receive_all_cu_data();
+	cout.rdbuf(coutbuf);
+}
+
+int create_statistik_process()
+{
+	int pid = fork();
+
+	if (pid < 0)
+	{
+		cerr << "Fork failed" << endl;
+		return -1;
+	}
+	if (pid == 0) // Child process
+	{
+		run_stat_process();
+		return 0;
+	}
+	return pid; // Return the PID of the child process
+}
+
 
 void	create_proccesses(input_data_t& in_data, sem_t *sem_output)
 {
 	vector<int> pids(in_data.count);
-
+	int stat_pid = create_statistik_process();
+	
 	for (uint16_t i = 0; i < in_data.count; ++i)
 	{
 		pids[i] = create_proc(i, in_data);
 	}
-	end_apps(pids, in_data, sem_output);
+	end_apps(stat_pid, pids, in_data, sem_output);
 	for (uint16_t i = 0; i < in_data.count; ++i)
 	{
 		wait(NULL); // Wait for all child processes to finish

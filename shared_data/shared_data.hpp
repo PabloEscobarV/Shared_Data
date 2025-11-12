@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:05:09 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/11/02 21:36:49 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/11/07 15:43:25 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,41 +22,9 @@
 
 class Shared_data
 {
-  protected:
+  public:
 
-    enum e_state
-    {
-      SSV_MSG_REQUEST,
-      SSRV_MSG_REQUEST,
-      SSE_MSG_REQUEST,
-      SYNCED,
-      IS_ERR_STATE
-    };
-    
-    static const uint16_t SSV_ALL_PERIOD = 500;
-    static const uint8_t  COUNT = NUM_SYNC_PARAM;
-    static const uint8_t  SSV_PERIOD = 5;
-    static const uint8_t  SSRV_PERIOD = 2;
-    static const uint8_t  SSE_PERIOD = 5;
-    static const uint8_t  SSRV_ATTEMPTS = 3;
-    static const uint8_t  TICK = 20;
-    static const uint8_t  PACK_SIZE = 8;
-    static const uint8_t  MIN_ACT_TICK = TICK * SSV_PERIOD;
-    static const uint8_t  QUEUE_SIZE = COUNT;
     static const uint8_t  SHARED_PARM_MAX_DATA_LEN = 4;
-    static const uint8_t  MAX_MESSAGE_SIZE = 8;
-
-    struct sse_service_t
-    {
-      uint8_t counter;
-      uint8_t idx;
-
-      sse_service_t(uint8_t idx_val = csl_cmp_int<uint16_t>::not_valid(),
-                    uint8_t counter_val = csl_cmp_int<uint8_t>::not_valid())
-                    : counter(counter_val), idx(idx_val) {}
-    };
-
-
     struct ssv_message_t
     {
       uint8_t   param_val[SHARED_PARM_MAX_DATA_LEN];
@@ -80,6 +48,44 @@ class Shared_data
       uint8_t  error_code;
 
       sse_message_t(const uint8_t *ptr_data = nullptr, const uint16_t data_len = 0);
+    };
+
+    Shared_data();
+    bool add_ssrv_message(const uint16_t param_num, const uint8_t *new_param_val);
+    void initialize(const uint8_t ssv_pack_size);
+    void service();
+    inline bool is_synced() const { return Bit::test(state, SYNCED); }
+  protected:
+
+    enum e_state
+    {
+      SSV_MSG_REQUEST,
+      SSRV_MSG_REQUEST,
+      SSE_MSG_REQUEST,
+      SYNCED,
+      IS_ERR_STATE
+    };
+    
+    static const uint16_t SSV_ALL_PERIOD = 500;
+    static const uint8_t  COUNT = NUM_SYNC_PARAM;
+    static const uint8_t  SSV_PERIOD = 5;
+    static const uint8_t  SSRV_PERIOD = 2;
+    static const uint8_t  SSE_PERIOD = 5;
+    static const uint8_t  SSRV_ATTEMPTS = 3;
+    static const uint8_t  TICK = 20;
+    static const uint8_t  PACK_SIZE = 8;
+    static const uint8_t  MIN_ACT_TICK = TICK * SSV_PERIOD;
+    static const uint8_t  QUEUE_SIZE = COUNT;
+    static const uint8_t  MAX_MESSAGE_SIZE = 8;
+
+    struct sse_service_t
+    {
+      uint8_t counter;
+      uint8_t idx;
+
+      sse_service_t(uint8_t idx_val = csl_cmp_int<uint16_t>::not_valid(),
+                    uint8_t counter_val = csl_cmp_int<uint8_t>::not_valid())
+                    : counter(counter_val), idx(idx_val) {}
     };
 
     bool get_ssv_message(ssv_message_t &message);
@@ -138,12 +144,6 @@ class Shared_data
       }
     }
     
-  public:
-    Shared_data();
-    bool add_ssrv_message(const uint16_t param_num, const uint8_t *new_param_val);
-    void initialize(const uint8_t ssv_pack_size);
-    void service();
-    inline bool is_synced() const { return Bit::test(state, SYNCED); }
  };
 
 #endif

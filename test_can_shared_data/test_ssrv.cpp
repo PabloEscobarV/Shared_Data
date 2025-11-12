@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   test_ssrv.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 06:51:11 by blackrider        #+#    #+#             */
-/*   Updated: 2025/10/27 01:33:26 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/11/12 08:55:30 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../hdrs/client_server_shared_setpoint.hpp"
 #include "../hdrs/test.hpp"
 #include "../hdrs/socket.hpp"
-
+#include "test_ssrv.hpp"
 
 #include <iostream>
 #include <thread>
@@ -51,20 +51,25 @@ void	send_ssrv_start_message(const udp_data_t& udp_data)
 {
 	ssrv_data_t ssrv_start_message = {};
 
-	while (true)
-	{
+	// while (true)
+	// {
 		ssrv_start_message = get_ssrv_data();
 		cout << "Entered ID: " << ssrv_start_message.id
 			 << ", Parameter Index: " << ssrv_start_message.param_idx
 			 << ", Parameter Value: " << ssrv_start_message.param_val << endl;
 		send_udp(udp_data, ssrv_start_message);
-	}
+	// }
 }
 
-int	main()
+void send_ssrv_request()
 {
 	udp_data_t udp_data_sender = create_sender_socket(MULTICAST_SSRV_IP, MULTICAST_SSRV_PORT);
 	send_ssrv_start_message(udp_data_sender);
 	close(udp_data_sender.sock_fd);
-	return 0;
 }
+
+// int	main()
+// {
+// 	send_ssrv_request();
+// 	return 0;
+// }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/11 10:11:16 by blackrider        #+#    #+#             */
-/*   Updated: 2025/10/26 14:21:48 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/11/07 09:46:35 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ void	send_ssv(udp_data_t& udp_data, SharedData<P_COUNT> *shared_data, ParamData 
 	can_data.idx_can = get_pid();
 	for (int i = 0; i < SEND_DURATION; ++i)
 	{
-		shared_data->period_counter();67yu9
+		shared_data->period_counter();
 		if (shared_data->get_messages(can_data))
 		{
 			send_udp(udp_data, can_data);

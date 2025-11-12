@@ -16,6 +16,8 @@
         "../shared_param/*.cpp",
         "../param_data/*.cpp",
         "../p_iterator/*.cpp",
+        "info_all_cu.cpp",
+        "test_ssrv.cpp",
         "-o",
         "${fileDirname}/${fileBasenameNoExtension}"
       ],

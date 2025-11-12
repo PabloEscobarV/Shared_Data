@@ -3,15 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   can_app_message.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 21:13:34 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/27 03:36:11 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/11/07 17:23:58 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CAN_APP_MESSAGE_HPP
 #define CAN_APP_MESSAGE_HPP
+
+#include "../bit/bit.hpp"
 
 #include <cstdint>
 
@@ -43,16 +45,34 @@ class Can_app_message
 		uint16_t       				get_sid() const;
 		const uint8_t* 				get_messages_size_count() const;
 		inline void						set_pid(uint8_t pid) { source_controller_id = pid; }
+		inline void						reset_offset() { offset = 0; }
+		template <typename data_t>
+		bool get_data(const uint16_t msg_type, data_t& dest);
 
 	private:
 		
 		uint8_t  							data[MAX_DATA_LEN];
-		uint8_t           		data_length;
-		Can_app_message_type 	message_type;
-		uint16_t          		flags;
-		uint8_t          			source_controller_id;
-		uint16_t         			sid;
 		uint8_t          			messages_size_count[MAX_FLAGS_COUNT];
+		uint16_t          		flags;
+		uint16_t         			sid;
+		Can_app_message_type 	message_type;
+		uint8_t          			source_controller_id;
+		uint8_t           		data_length;
+		uint8_t 				 			offset;
 };
+
+template <typename data_t>
+bool Can_app_message::get_data(const uint16_t msg_type, data_t& dest)
+{
+  bool result = false;
+
+  if (Bit::test(flags, msg_type) && (offset + sizeof(data_t) <= data_length))
+  {
+    memcpy(&dest, data + offset, sizeof(data_t));
+    offset += sizeof(data_t);
+    result = true;
+  }
+  return result;
+}
 
 #endif // CAN_APP_MESSAGE_HPP

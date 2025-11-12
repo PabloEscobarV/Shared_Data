@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:02:52 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/11/02 21:35:50 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/11/12 09:47:05 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 #include "../p_iterator/p_iterator.hpp"
 #include "../param_data/param_data.hpp"
+#include "../hdrs/test.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -63,6 +64,7 @@ bool Shared_param::add_new_value(const uint16_t co_num, Shared_buffer& shared_bu
     reset_out_of_range_ssrv_state();
     reset_new_value_not_allowed_state();
     result = true;
+    cout << "New value added for CO_NUM: " << co_num << " Value: " << *reinterpret_cast<const uint32_t*>(ptr_new_param_val) << endl;
   }
   return result;
 }
@@ -225,8 +227,9 @@ bool Shared_param::is_param_val_in_range(const uint16_t co_num, const uint8_t *p
   if (ptr_new_data != nullptr)
   {
     (void)memcpy(&new_value, ptr_new_data, sizeof(uint32_t));
-    in_range = new_value >= param_data->get_param_min_value(co_num)
-               && new_value <= param_data->get_param_max_value(co_num);
+    uint16_t param_idx = param_data->get_param_idx(co_num);  // Convert co_num to idx!
+    in_range = new_value >= param_data->get_param_min_value(param_idx)
+               && new_value <= param_data->get_param_max_value(param_idx);
   }
   return in_range;
 }
@@ -248,7 +251,7 @@ void Shared_param::service_new_value(const uint16_t co_num, const uint16_t curre
 {
   if (check_wait_counter(current_tick))
   {
-    accept_new_value(param_data->get_param_num(counter), shared_buffer);
+    accept_new_value(co_num, shared_buffer);
   }
 }
 

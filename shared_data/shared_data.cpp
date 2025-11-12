@@ -6,7 +6,7 @@
 /*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 21:11:03 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/11/02 21:38:55 by blackrider       ###   ########.fr       */
+/*   Updated: 2025/11/12 09:27:01 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,7 +118,7 @@ bool  Shared_data::check_counter_ssv() const
 
 uint16_t Shared_data::get_all_comm_obj_len(const uint16_t comm_obj_idx) const
 {
-  return sizeof(uint32_t) * NUM_SYNC_PARAM;
+  return sizeof(uint32_t) * comm_obj_idx;
 }
 
 bool  Shared_data::get_ssv_message(ssv_message_t &message)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   can_app_message.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/24 21:18:43 by Pablo Escob       #+#    #+#             */
-/*   Updated: 2025/10/24 21:28:17 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/11/07 11:09:45 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,8 @@ Can_app_message::Can_app_message(const uint8_t* ptr_data,
 		message_type(msg_type),
 		flags(msg_flags),
 		source_controller_id(src_controller_id),
-		sid(message_sid)
+		sid(message_sid),
+		offset(0)
 {
 	memset(data, 0, sizeof(data));
 	memset(messages_size_count, 0, sizeof(messages_size_count));

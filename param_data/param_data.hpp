@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   param_data.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: Pablo Escobar <sataniv.rider@gmail.com>    +#+  +:+       +#+        */
+/*   By: blackrider <blackrider@student.42.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/07 07:19:29 by blackrider        #+#    #+#             */
-/*   Updated: 2025/10/26 20:57:10 by Pablo Escob      ###   ########.fr       */
+/*   Updated: 2025/11/07 15:01:07 by blackrider       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
